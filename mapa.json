@@ -1,0 +1,1761 @@
+{
+  "title": "MLTraining",
+  "routes": [
+    {
+      "id": "ds",
+      "name": "Data Scientist",
+      "subtitle": "Datos, estadística y ML clásico",
+      "purpose": "Aprender a formular problemas, analizar datos, construir baselines y defender resultados.",
+      "competencies": [
+        {
+          "id": "DS01",
+          "priority": "P0",
+          "suggestedWindow": "S1–2",
+          "title": "Python: estructuras, control, funciones, POO",
+          "prerequisitesAndSources": "Base: Ninguno / Fuente: FUT M1 · AAI PREP",
+          "evidence": "Ejercicios y módulo reusable"
+        },
+        {
+          "id": "DS02",
+          "priority": "P0",
+          "suggestedWindow": "S1–2",
+          "title": "Entornos y notebooks reproducibles",
+          "prerequisitesAndSources": "Base: DS01 / Fuente: AAI PREP · FUT M1",
+          "evidence": "Notebook limpio y entorno fijado"
+        },
+        {
+          "id": "DS03",
+          "priority": "P0",
+          "suggestedWindow": "S1–2",
+          "title": "NumPy: arrays, operaciones y broadcasting",
+          "prerequisitesAndSources": "Base: DS01 / Fuente: AAI PREP · FUT M1",
+          "evidence": "Operaciones vectorizadas y tests"
+        },
+        {
+          "id": "DS04",
+          "priority": "P0",
+          "suggestedWindow": "S2–3",
+          "title": "Pandas: joins, groupby y limpieza",
+          "prerequisitesAndSources": "Base: DS01 / Fuente: AAI PREP · FUT M1",
+          "evidence": "Dataset limpio verificable"
+        },
+        {
+          "id": "DS05",
+          "priority": "P0",
+          "suggestedWindow": "S2–4",
+          "title": "SQL: joins, agregaciones, CTE, ventanas",
+          "prerequisitesAndSources": "Base: DS01 + modelo relacional / Fuente: AAI S1 · IBM-DE (apoyo)",
+          "evidence": "10 consultas con resultados controlados"
+        },
+        {
+          "id": "DS06",
+          "priority": "P0",
+          "suggestedWindow": "S3–4",
+          "title": "Visualización y EDA con hipótesis",
+          "prerequisitesAndSources": "Base: DS04 / Fuente: FUT M1/M3 · AAI S1",
+          "evidence": "EDA con hallazgos y limitaciones"
+        },
+        {
+          "id": "DS07",
+          "priority": "P0",
+          "suggestedWindow": "S3–4",
+          "title": "Descriptiva: dispersión y asociación",
+          "prerequisitesAndSources": "Base: DS03/04 / Fuente: FUT M2 · AAI S1",
+          "evidence": "Informe de segmentos y outliers"
+        },
+        {
+          "id": "DS08",
+          "priority": "P0",
+          "suggestedWindow": "S3–5",
+          "title": "Probabilidad, Bayes y distribuciones",
+          "prerequisitesAndSources": "Base: DS07 / Fuente: K-MATH · FUT M2 (parcial)",
+          "evidence": "Simulación Python y justificación"
+        },
+        {
+          "id": "DS09",
+          "priority": "P0",
+          "suggestedWindow": "S4–6",
+          "title": "Inferencia: intervalos, bootstrap, hipótesis",
+          "prerequisitesAndSources": "Base: DS08 / Fuente: FUT M2 · K-MATH",
+          "evidence": "Intervalos/pruebas con supuestos"
+        },
+        {
+          "id": "DS10",
+          "priority": "P0",
+          "suggestedWindow": "S4–6",
+          "title": "Preprocesamiento, faltantes y leakage",
+          "prerequisitesAndSources": "Base: DS04/07 / Fuente: FUT M3 · AAI S2",
+          "evidence": "Pipeline train/test sin fugas"
+        },
+        {
+          "id": "DS11",
+          "priority": "P0",
+          "suggestedWindow": "S5–7",
+          "title": "Feature engineering y WOE",
+          "prerequisitesAndSources": "Base: DS10 / Fuente: FUT M3 · AAI S2",
+          "evidence": "Comparativa antes/después"
+        },
+        {
+          "id": "DS12",
+          "priority": "P0",
+          "suggestedWindow": "S5–7",
+          "title": "Regresión y clasificación supervisada",
+          "prerequisitesAndSources": "Base: DS09/10 / Fuente: FUT M4 · AAI S2 · IBM-AI #1",
+          "evidence": "Baseline reproducible"
+        },
+        {
+          "id": "DS13",
+          "priority": "P0",
+          "suggestedWindow": "S6–8",
+          "title": "Validación: CV, métricas, umbrales, calibración",
+          "prerequisitesAndSources": "Base: DS12 / Fuente: AAI S2 · IBM-AI #1",
+          "evidence": "Model card con errores y métricas"
+        },
+        {
+          "id": "DS14",
+          "priority": "P0",
+          "suggestedWindow": "S7–9",
+          "title": "Ensembles, sesgo-varianza y comparación",
+          "prerequisitesAndSources": "Base: DS13 / Fuente: FUT M4 · AAI S2",
+          "evidence": "Benchmark de 3 modelos"
+        },
+        {
+          "id": "DS15",
+          "priority": "P1",
+          "suggestedWindow": "S8–10",
+          "title": "Clustering, PCA y segmentación",
+          "prerequisitesAndSources": "Base: DS03/07 / Fuente: FUT M2/M4 · AAI S2",
+          "evidence": "Segmentos y estabilidad"
+        },
+        {
+          "id": "DS16",
+          "priority": "P1",
+          "suggestedWindow": "S10–12",
+          "title": "Series temporales y split temporal",
+          "prerequisitesAndSources": "Base: DS13 / Fuente: K-MATH/AAI (si aplica)",
+          "evidence": "Backtest sin fuga temporal"
+        },
+        {
+          "id": "DS17",
+          "priority": "P1",
+          "suggestedWindow": "S10–12",
+          "title": "Experimentos, A/B y causalidad básica",
+          "prerequisitesAndSources": "Base: DS09 / Fuente: K-MATH/Material puntual",
+          "evidence": "Diseño de experimento argumentado"
+        },
+        {
+          "id": "DS18",
+          "priority": "P0",
+          "suggestedWindow": "S11–12",
+          "title": "Comunicación de resultados y límites",
+          "prerequisitesAndSources": "Base: DS06/13 / Fuente: FUT · PROY",
+          "evidence": "Informe y presentación defendible"
+        }
+      ]
+    },
+    {
+      "id": "me",
+      "name": "ML Engineer",
+      "subtitle": "Pipelines, MLOps y data engineering",
+      "purpose": "Convertir experimentos en productos reproducibles y operables.",
+      "competencies": [
+        {
+          "id": "ME01",
+          "priority": "P0",
+          "suggestedWindow": "S1–3",
+          "title": "Git, ramas, commits y revisión",
+          "prerequisitesAndSources": "Base: DS01 / Fuente: AAI S3 · K-MLOPS",
+          "evidence": "Repositorio con historial y PR"
+        },
+        {
+          "id": "ME02",
+          "priority": "P0",
+          "suggestedWindow": "S1–3",
+          "title": "Dependencias, packaging y configuración",
+          "prerequisitesAndSources": "Base: DS01 / Fuente: K-MLOPS · AAI S3",
+          "evidence": "Instalación limpia y config segura"
+        },
+        {
+          "id": "ME03",
+          "priority": "P0",
+          "suggestedWindow": "S2–4",
+          "title": "Modelado relacional / dimensional",
+          "prerequisitesAndSources": "Base: DS05 / Fuente: AAI S1 · IBM-DE",
+          "evidence": "DDL y grano documentado"
+        },
+        {
+          "id": "ME04",
+          "priority": "P0",
+          "suggestedWindow": "S2–4",
+          "title": "Ingesta CSV, API y bases de datos",
+          "prerequisitesAndSources": "Base: DS04/05 / Fuente: AAI S1 · IBM-DE",
+          "evidence": "Ingesta reproducible"
+        },
+        {
+          "id": "ME05",
+          "priority": "P0",
+          "suggestedWindow": "S3–5",
+          "title": "Calidad, esquemas y tests de datos",
+          "prerequisitesAndSources": "Base: ME04 / Fuente: AAI S1 · IBM-DE",
+          "evidence": "Checks y reporte de anomalías"
+        },
+        {
+          "id": "ME06",
+          "priority": "P0",
+          "suggestedWindow": "S4–6",
+          "title": "ETL/ELT incremental e idempotencia",
+          "prerequisitesAndSources": "Base: ME04/05 / Fuente: AAI S1 · IBM-DE",
+          "evidence": "Pipeline sin duplicados al reintentar"
+        },
+        {
+          "id": "ME07",
+          "priority": "P0",
+          "suggestedWindow": "S5–7",
+          "title": "Feature pipeline y versionado point-in-time",
+          "prerequisitesAndSources": "Base: DS11 + ME06 / Fuente: AAI S2 · IBM-DE",
+          "evidence": "Features sin leakage temporal"
+        },
+        {
+          "id": "ME08",
+          "priority": "P0",
+          "suggestedWindow": "S5–7",
+          "title": "MLflow: experimentos, artefactos y registro",
+          "prerequisitesAndSources": "Base: DS12/13 / Fuente: K-MLOPS",
+          "evidence": "Comparación y linaje de ejecuciones"
+        },
+        {
+          "id": "ME09",
+          "priority": "P0",
+          "suggestedWindow": "S6–8",
+          "title": "DVC: versionado de datos/modelos",
+          "prerequisitesAndSources": "Base: ME01 + ME08 / Fuente: K-MLOPS",
+          "evidence": "Pipeline reproducible con versiones"
+        },
+        {
+          "id": "ME10",
+          "priority": "P0",
+          "suggestedWindow": "S5–8",
+          "title": "Diseño modular, typing, pytest",
+          "prerequisitesAndSources": "Base: ME02 / Fuente: AAI S3 · K-MLOPS",
+          "evidence": "Suite automatizada con casos borde"
+        },
+        {
+          "id": "ME11",
+          "priority": "P0",
+          "suggestedWindow": "S7–9",
+          "title": "API de inferencia y contratos",
+          "prerequisitesAndSources": "Base: DS12 + ME10 / Fuente: AAI S3 · K-MLOPS",
+          "evidence": "Servicio con validación y tests"
+        },
+        {
+          "id": "ME12",
+          "priority": "P0",
+          "suggestedWindow": "S8–10",
+          "title": "Docker y entornos portables",
+          "prerequisitesAndSources": "Base: ME11 / Fuente: AAI S3 · K-MLOPS",
+          "evidence": "Imagen con prueba smoke"
+        },
+        {
+          "id": "ME13",
+          "priority": "P0",
+          "suggestedWindow": "S9–11",
+          "title": "CI/CD y automatización",
+          "prerequisitesAndSources": "Base: ME10 + ME12 / Fuente: K-MLOPS",
+          "evidence": "Pipeline que ejecuta tests y build"
+        },
+        {
+          "id": "ME14",
+          "priority": "P1",
+          "suggestedWindow": "S8–11",
+          "title": "Orquestación, DAG, retry y backfill",
+          "prerequisitesAndSources": "Base: ME06 / Fuente: K-MLOPS · IBM-DE",
+          "evidence": "Pipeline con retry y runbook"
+        },
+        {
+          "id": "ME15",
+          "priority": "P0",
+          "suggestedWindow": "S10–12",
+          "title": "Despliegue y operación de modelos",
+          "prerequisitesAndSources": "Base: ME11–13 / Fuente: AAI S3 · K-MLOPS",
+          "evidence": "Endpoint desplegado y documentado"
+        },
+        {
+          "id": "ME16",
+          "priority": "P0",
+          "suggestedWindow": "S11–12",
+          "title": "Monitoreo: logs, drift, rendimiento y costo",
+          "prerequisitesAndSources": "Base: ME15 / Fuente: K-MLOPS · IBM-DE",
+          "evidence": "Dashboard y alerta reproducible"
+        },
+        {
+          "id": "ME17",
+          "priority": "P0",
+          "suggestedWindow": "S11–12",
+          "title": "Seguridad, secretos, PII y rollback",
+          "prerequisitesAndSources": "Base: ME10/15 / Fuente: K-MLOPS · IBM-DE",
+          "evidence": "Threat model y prueba rollback"
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "name": "AI Engineer",
+      "subtitle": "Deep Learning, PyTorch y Transformers",
+      "purpose": "Comprender cómo funcionan, se entrenan y se evalúan redes neuronales y Transformers.",
+      "competencies": [
+        {
+          "id": "AI01",
+          "priority": "P0",
+          "suggestedWindow": "S1–3",
+          "title": "Álgebra lineal: tensores y transformaciones",
+          "prerequisitesAndSources": "Base: DS03 / Fuente: K-MATH · IBM-AI #2/#4",
+          "evidence": "Notebook de operaciones y dimensiones"
+        },
+        {
+          "id": "AI02",
+          "priority": "P0",
+          "suggestedWindow": "S1–4",
+          "title": "Derivadas, regla de cadena y gradientes",
+          "prerequisitesAndSources": "Base: AI01 / Fuente: K-MATH · IBM-AI #2",
+          "evidence": "Gradiente analítico vs numérico"
+        },
+        {
+          "id": "AI03",
+          "priority": "P0",
+          "suggestedWindow": "S2–4",
+          "title": "Perceptrón, MLP, forward y backprop",
+          "prerequisitesAndSources": "Base: AI01/02 / Fuente: IBM-AI #2 · AAI S4",
+          "evidence": "MLP simple desde cero"
+        },
+        {
+          "id": "AI04",
+          "priority": "P0",
+          "suggestedWindow": "S3–5",
+          "title": "Funciones pérdida y optimizadores",
+          "prerequisitesAndSources": "Base: AI03 / Fuente: IBM-AI #2/#3 · AAI S4",
+          "evidence": "Curvas de entrenamiento y comparación"
+        },
+        {
+          "id": "AI05",
+          "priority": "P0",
+          "suggestedWindow": "S4–6",
+          "title": "Regularización y generalización",
+          "prerequisitesAndSources": "Base: AI04 / Fuente: IBM-AI #3 · AAI S4",
+          "evidence": "Ablación dropout/weight decay"
+        },
+        {
+          "id": "AI06",
+          "priority": "P0",
+          "suggestedWindow": "S4–6",
+          "title": "Keras / TensorFlow: entrenamiento y eval",
+          "prerequisitesAndSources": "Base: AI03–05 / Fuente: IBM-AI #2/#3",
+          "evidence": "Modelo reproducible + evaluación"
+        },
+        {
+          "id": "AI07",
+          "priority": "P0",
+          "suggestedWindow": "S5–7",
+          "title": "PyTorch: autograd y módulos",
+          "prerequisitesAndSources": "Base: AI02/03 / Fuente: IBM-AI #4",
+          "evidence": "Entrenamiento + tests de gradiente"
+        },
+        {
+          "id": "AI08",
+          "priority": "P0",
+          "suggestedWindow": "S6–8",
+          "title": "PyTorch: bucles, DataLoader y debugging",
+          "prerequisitesAndSources": "Base: AI07 / Fuente: IBM-AI #5",
+          "evidence": "Entrenador con métricas y checkpoints"
+        },
+        {
+          "id": "AI09",
+          "priority": "P0",
+          "suggestedWindow": "S7–9",
+          "title": "CNN e imágenes: augmentación y métricas",
+          "prerequisitesAndSources": "Base: AI06/08 / Fuente: AAI S4 · IBM-AI #6",
+          "evidence": "Clasificador CNN con errores analizados"
+        },
+        {
+          "id": "AI10",
+          "priority": "P1",
+          "suggestedWindow": "S8–10",
+          "title": "Transfer learning y comparación de baselines",
+          "prerequisitesAndSources": "Base: AI09 / Fuente: IBM-AI #6 · AAI S4",
+          "evidence": "Benchmark ajustado vs congelado"
+        },
+        {
+          "id": "AI11",
+          "priority": "P0",
+          "suggestedWindow": "S8–10",
+          "title": "Texto: tokenización y features",
+          "prerequisitesAndSources": "Base: DS04 + AI03 / Fuente: AAI S5 · IBM-AI #8",
+          "evidence": "Clasificador NLP baseline"
+        },
+        {
+          "id": "AI12",
+          "priority": "P1",
+          "suggestedWindow": "S9–11",
+          "title": "RNN y LSTM para secuencias",
+          "prerequisitesAndSources": "Base: AI11 + AI07 / Fuente: AAI S5",
+          "evidence": "Secuencia con análisis de límites"
+        },
+        {
+          "id": "AI13",
+          "priority": "P0",
+          "suggestedWindow": "S9–11",
+          "title": "Attention y arquitectura Transformer",
+          "prerequisitesAndSources": "Base: AI03 + AI11 / Fuente: AAI S5 · IBM-AI #9",
+          "evidence": "Atención visualizada / bloque básico"
+        },
+        {
+          "id": "AI14",
+          "priority": "P0",
+          "suggestedWindow": "S10–12",
+          "title": "BERT y modelos preentrenados",
+          "prerequisitesAndSources": "Base: AI13 / Fuente: AAI S5 · IBM-AI #8/#9",
+          "evidence": "Inferencia y benchmark reproducible"
+        },
+        {
+          "id": "AI15",
+          "priority": "P1",
+          "suggestedWindow": "S11–12",
+          "title": "Fine-tuning y restricciones computacionales",
+          "prerequisitesAndSources": "Base: AI13/14 / Fuente: IBM-AI #10/#11",
+          "evidence": "Experimento con costo, métricas y límites"
+        },
+        {
+          "id": "AI16",
+          "priority": "P0",
+          "suggestedWindow": "S11–12",
+          "title": "Capstone DL: eval, errores y comunicación",
+          "prerequisitesAndSources": "Base: AI08 + AI09/14 / Fuente: IBM-AI #6 · AAI final",
+          "evidence": "Repositorio / model card defendible"
+        }
+      ]
+    },
+    {
+      "id": "ga",
+      "name": "GenAI Engineer",
+      "subtitle": "LLMs, RAG, agentes y evaluación",
+      "purpose": "Desarrollar aplicaciones LLM confiables y medibles.",
+      "competencies": [
+        {
+          "id": "GA01",
+          "priority": "P0",
+          "suggestedWindow": "S1–2",
+          "title": "Conceptos LLM: tokens, contexto, latencia",
+          "prerequisitesAndSources": "Base: DS01 + API / Fuente: CF M1 · IBM-AI #7",
+          "evidence": "Cuaderno de costo/latencia"
+        },
+        {
+          "id": "GA02",
+          "priority": "P0",
+          "suggestedWindow": "S1–3",
+          "title": "Prompting de sistemas y evaluación básica",
+          "prerequisitesAndSources": "Base: GA01 / Fuente: CF M1 · AAI S5",
+          "evidence": "Comparación de prompts sobre dataset"
+        },
+        {
+          "id": "GA03",
+          "priority": "P0",
+          "suggestedWindow": "S2–4",
+          "title": "Structured outputs: Pydantic y contratos",
+          "prerequisitesAndSources": "Base: DS01 / Fuente: CF M1",
+          "evidence": "Extractor JSON validado con tests"
+        },
+        {
+          "id": "GA04",
+          "priority": "P0",
+          "suggestedWindow": "S3–5",
+          "title": "Function calling y herramientas seguras",
+          "prerequisitesAndSources": "Base: GA03 / Fuente: CF M1 · IBM-AI #12",
+          "evidence": "Tool con permisos y entradas inválidas"
+        },
+        {
+          "id": "GA05",
+          "priority": "P0",
+          "suggestedWindow": "S3–6",
+          "title": "Patrones API: retry, tiempo, streaming, costos",
+          "prerequisitesAndSources": "Base: GA03/04 / Fuente: CF M1/M4 · práctica transversal",
+          "evidence": "Cliente robusto con métricas"
+        },
+        {
+          "id": "GA06",
+          "priority": "P0",
+          "suggestedWindow": "S4–6",
+          "title": "Embeddings y similitud semántica",
+          "prerequisitesAndSources": "Base: DS03 + GA01 / Fuente: CF M2 · IBM-AI #12",
+          "evidence": "Evaluación retrieval básica"
+        },
+        {
+          "id": "GA07",
+          "priority": "P0",
+          "suggestedWindow": "S5–7",
+          "title": "Ingesta, chunking e índices vectoriales",
+          "prerequisitesAndSources": "Base: GA06 + ME04 / Fuente: CF M2 · IBM-AI #13",
+          "evidence": "RAG con corpus y versionado"
+        },
+        {
+          "id": "GA08",
+          "priority": "P0",
+          "suggestedWindow": "S6–8",
+          "title": "Retrieval avanzado: híbrido, rerank y filtros",
+          "prerequisitesAndSources": "Base: GA07 / Fuente: CF M2",
+          "evidence": "Benchmark hit@k/recall y latencia"
+        },
+        {
+          "id": "GA09",
+          "priority": "P0",
+          "suggestedWindow": "S7–9",
+          "title": "RAG grounding, citas y evaluación",
+          "prerequisitesAndSources": "Base: GA07/08 / Fuente: CF M2/M4 · IBM-AI #13",
+          "evidence": "Set de preguntas y análisis fallos"
+        },
+        {
+          "id": "GA10",
+          "priority": "P0",
+          "suggestedWindow": "S7–9",
+          "title": "Workflows y estado; cuándo NO usar agentes",
+          "prerequisitesAndSources": "Base: GA04 + GA09 / Fuente: CF M3",
+          "evidence": "Workflow trazable de estados"
+        },
+        {
+          "id": "GA11",
+          "priority": "P0",
+          "suggestedWindow": "S8–10",
+          "title": "Agente ReAct y ejecución de tools",
+          "prerequisitesAndSources": "Base: GA10 / Fuente: CF M3 · IBM-AI #12",
+          "evidence": "Agente con límites y pruebas"
+        },
+        {
+          "id": "GA12",
+          "priority": "P1",
+          "suggestedWindow": "S9–11",
+          "title": "LangGraph: supervisión y handoffs",
+          "prerequisitesAndSources": "Base: GA10/11 / Fuente: CF M3",
+          "evidence": "Flujo con decisiones justificadas"
+        },
+        {
+          "id": "GA13",
+          "priority": "P0",
+          "suggestedWindow": "S9–11",
+          "title": "Memoria, persistencia y HITL",
+          "prerequisitesAndSources": "Base: GA11 / Fuente: CF M3",
+          "evidence": "Aprobación humana + auditoría"
+        },
+        {
+          "id": "GA14",
+          "priority": "P1",
+          "suggestedWindow": "S10–12",
+          "title": "MCP: recursos, tools y contratos",
+          "prerequisitesAndSources": "Base: GA04 + GA11 / Fuente: CF M4",
+          "evidence": "Integración MCP con permisos"
+        },
+        {
+          "id": "GA15",
+          "priority": "P0",
+          "suggestedWindow": "S9–12",
+          "title": "Evals de LLM/RAG/agentes y regresión",
+          "prerequisitesAndSources": "Base: GA09/11 / Fuente: CF M4 · IBM-AI #13",
+          "evidence": "Suite de evaluación repetible"
+        },
+        {
+          "id": "GA16",
+          "priority": "P0",
+          "suggestedWindow": "S11–12",
+          "title": "Observabilidad, seguridad y guardrails",
+          "prerequisitesAndSources": "Base: GA05 + GA15 / Fuente: CF M4",
+          "evidence": "Trazas y pruebas prompt injection"
+        },
+        {
+          "id": "GA17",
+          "priority": "P1",
+          "suggestedWindow": "S11–12",
+          "title": "Deploy, versionado y LLMOps",
+          "prerequisitesAndSources": "Base: GA16 + ME13 / Fuente: CF M4 · K-MLOPS (transferible)",
+          "evidence": "Runbook, release y rollback"
+        }
+      ]
+    }
+  ],
+  "hourContract": [
+    {
+      "area": "Data Science Core (Python + estadística + ML)",
+      "hours": 15.0,
+      "schedule": "L–V 07:00–08:30 y 09:00–10:30"
+    },
+    {
+      "area": "IBM AI Engineering / Deep Learning",
+      "hours": 20.0,
+      "schedule": "L–V 11:00–13:00 y 14:00–16:00"
+    },
+    {
+      "area": "GenAI Engineering (Código Facilito como fuente)",
+      "hours": 10.0,
+      "schedule": "L–V 18:30–20:30"
+    },
+    {
+      "area": "MLOps Bootcamp (Krish)",
+      "hours": 7.0,
+      "schedule": "S–D 07:00–08:30 y 09:00–11:00"
+    },
+    {
+      "area": "IBM AI-Native Data Engineering",
+      "hours": 4.0,
+      "schedule": "S–D 11:00–13:00"
+    },
+    {
+      "area": "Matemáticas y estadística aplicada",
+      "hours": 2.0,
+      "schedule": "Sábado 14:00–16:00"
+    },
+    {
+      "area": "Software Engineering aplicado",
+      "hours": 2.0,
+      "schedule": "Sábado 16:00–18:00"
+    },
+    {
+      "area": "Recuperación activa: DS / AI / GenAI",
+      "hours": 7.5,
+      "schedule": "Cada día laborable: 10:30, 16:00 y 20:30; 30 min cada una"
+    },
+    {
+      "area": "Proyectos y portfolio",
+      "hours": 4.0,
+      "schedule": "Mié 16:30–18:00; Sáb 18:30–20:00 y 20:00–21:00"
+    },
+    {
+      "area": "Exámenes de DS y AI",
+      "hours": 1.5,
+      "schedule": "Dom 14:00–14:45 y 14:45–15:30"
+    },
+    {
+      "area": "Revisión + planificación",
+      "hours": 1.0,
+      "schedule": "Dom 15:30–16:30"
+    },
+    {
+      "area": "Entrenamiento y ducha",
+      "hours": 6.0,
+      "schedule": "L, M, J, V 16:30–18:00"
+    }
+  ],
+  "levels": [
+    {
+      "level": 0,
+      "definition": "No iniciado",
+      "minimumProof": "Sin evidencia"
+    },
+    {
+      "level": 1,
+      "definition": "Reconoce y explica con apoyo",
+      "minimumProof": "Nota y ejemplo guiado"
+    },
+    {
+      "level": 2,
+      "definition": "Ejecuta un caso delimitado",
+      "minimumProof": "Ejercicio reproducible"
+    },
+    {
+      "level": 3,
+      "definition": "Aplica, justifica y maneja errores",
+      "minimumProof": "Artefacto probado"
+    },
+    {
+      "level": 4,
+      "definition": "Integra, mide y explica límites",
+      "minimumProof": "Proyecto o revisión defendible"
+    }
+  ],
+  "sources": [
+    {
+      "code": "FUT",
+      "description": "Futura Data Science Applied · M1–M4",
+      "use": "Principal en fundamentos de datos, EDA, estadística y ML aplicado"
+    },
+    {
+      "code": "AAI",
+      "description": "AnyoneAI ML Engineer · PREP, Sprints 1–5, final",
+      "use": "Referencia de datos, ML, despliegue, DL y NLP; conservar orden de la cohorte como índice de consulta"
+    },
+    {
+      "code": "IBM-AI",
+      "description": "IBM AI Engineering · cursos 1–13",
+      "use": "Principal en DL/PyTorch; cursos de ML y GenAI como apoyo según tema"
+    },
+    {
+      "code": "CF",
+      "description": "Código Facilito AI Engineer · M1–M4",
+      "use": "Principal en aplicaciones con LLMs, RAG, agentes y producción"
+    },
+    {
+      "code": "K-MLOPS",
+      "description": "Complete MLOps Bootcamp with 10+ E2E ML Projects",
+      "use": "Principal en MLflow, DVC, Docker, pipelines, CI/CD, despliegue y monitoring"
+    },
+    {
+      "code": "IBM-DE",
+      "description": "IBM AI-Native Data Engineering",
+      "use": "Apoyo de datos para IA, pipelines, calidad y observabilidad. Detalle de cursos pendiente de validar"
+    },
+    {
+      "code": "K-MATH",
+      "description": "Mathematics — Basics to Advanced for DS and GenAI",
+      "use": "Consulta dirigida para álgebra, cálculo, probabilidad y optimización, sin bloque fijo"
+    },
+    {
+      "code": "PROY",
+      "description": "Repositorios y prácticas del usuario",
+      "use": "Proyecto transversal: la evidencia conecta todas las áreas"
+    }
+  ],
+  "dependencies": [
+    {
+      "capacity": "Data Science",
+      "prerequisite": "Python, NumPy/Pandas, estadística, split correcto",
+      "relationship": "DS genera datos preparados, métricas y baselines para ML Engineer"
+    },
+    {
+      "capacity": "ML Engineer",
+      "prerequisite": "Git/testing, SQL/ETL, entorno reproducible, ML básico",
+      "relationship": "MLE transforma el baseline en API, pipeline, contenedor y monitoreo"
+    },
+    {
+      "capacity": "AI Engineer (DL)",
+      "prerequisite": "Álgebra lineal, gradiente, tensores, clasificación",
+      "relationship": "AI/DL entrena modelos que después pueden servirse mediante MLE"
+    },
+    {
+      "capacity": "GenAI Engineer",
+      "prerequisite": "Python, APIs, prompts, schemas; luego embeddings y retrieval",
+      "relationship": "GenAI consume modelos/API y adopta pruebas, seguridad y observabilidad de MLE"
+    }
+  ],
+  "antiRedundancy": [
+    {
+      "content": "Python y Pandas",
+      "primary": "FUT / AAI PREP según avance",
+      "secondary": "No repetir introducciones si DS01–04 están validadas",
+      "closure": "Ejercicio nuevo y ejecución limpia"
+    },
+    {
+      "content": "Estadística, inferencia y ML clásico",
+      "primary": "FUT M2–M4",
+      "secondary": "AAI S2 / IBM-AI #1 para evaluar o ampliar",
+      "closure": "Baseline con métricas y explicación"
+    },
+    {
+      "content": "Data ingestion, ETL/ELT",
+      "primary": "AAI S1",
+      "secondary": "IBM-DE y K-MLOPS añaden calidad, backfill y operación",
+      "closure": "Pipeline incremental idempotente"
+    },
+    {
+      "content": "Software Engineering",
+      "primary": "K-MLOPS + AAI S3",
+      "secondary": "IBM-DE solo donde agregue valor",
+      "closure": "Tests + API + Docker + CI"
+    },
+    {
+      "content": "DL y redes neuronales",
+      "primary": "IBM-AI #2–6",
+      "secondary": "AAI S4 aporta práctica adicional, no segundo curso de fundamentos",
+      "closure": "Experimento con PyTorch/Keras"
+    },
+    {
+      "content": "NLP y Transformers",
+      "primary": "IBM-AI #8–11 / AAI S5",
+      "secondary": "CF aplica modelos a sistemas GenAI",
+      "closure": "Modelo evaluado y benchmark"
+    },
+    {
+      "content": "Fundamentos de LLMs y prompts",
+      "primary": "CF M1",
+      "secondary": "IBM-AI #7 contextualiza modelo; no duplicar teoría",
+      "closure": "Salida tipada + evaluación"
+    },
+    {
+      "content": "RAG, agentes y tools",
+      "primary": "CF M2–M4",
+      "secondary": "IBM-AI #12–13 complementa implementación",
+      "closure": "RAG/agente con evals y trazas"
+    },
+    {
+      "content": "Matemáticas",
+      "primary": "Bloque sábado + K-MATH cuando falte",
+      "secondary": "FUT/IBM aplican la matemática al caso",
+      "closure": "Derivación más ejercicio numérico"
+    }
+  ],
+  "sequence": [
+    {
+      "week": 1,
+      "startReference": "1 / 02/11",
+      "ds": "Python/NumPy y entorno",
+      "me": "Git y estructura de repos",
+      "ai": "Tensores / álgebra",
+      "ga": "API LLM, tokens",
+      "fundamentals": "Entornos, Python y álgebra lineal básica",
+      "mlops": "Git y GitHub"
+    },
+    {
+      "week": 2,
+      "startReference": "2 / 09/11",
+      "ds": "Pandas y manipulación",
+      "me": "SQL y modelo de datos",
+      "ai": "Gradientes / MLP",
+      "ga": "Prompts de sistema + outputs",
+      "fundamentals": "Funciones, vectores y matrices",
+      "mlops": "MLflow: tracking y artefactos"
+    },
+    {
+      "week": 3,
+      "startReference": "3 / 16/11",
+      "ds": "EDA y descriptiva",
+      "me": "Ingesta de archivos y API",
+      "ai": "Backprop y pérdidas",
+      "ga": "Pydantic y function calling",
+      "fundamentals": "Transformaciones, autovalores y geometría",
+      "mlops": "Integrar proyectos ML y ANN con MLflow"
+    },
+    {
+      "week": 4,
+      "startReference": "4 / 23/11",
+      "ds": "Probabilidad e inferencia",
+      "me": "ETL y pruebas de calidad",
+      "ai": "Keras/TensorFlow",
+      "ga": "Cliente LLM robusto",
+      "fundamentals": "Estadística descriptiva y probabilidad",
+      "mlops": "DVC y DagsHub"
+    },
+    {
+      "week": 5,
+      "startReference": "5 / 30/11",
+      "ds": "Regresión y clasificación",
+      "me": "MLflow y versionado",
+      "ai": "Optimización/regularización",
+      "ga": "Embeddings e ingesta RAG",
+      "fundamentals": "Distribuciones y muestreo",
+      "mlops": "Pipeline Git + DVC + MLflow + DagsHub"
+    },
+    {
+      "week": 6,
+      "startReference": "6 / 07/12",
+      "ds": "Feature engineering / leakage",
+      "me": "DVC y pipelines",
+      "ai": "PyTorch / autograd",
+      "ga": "RAG básico y corpus",
+      "fundamentals": "Inferencia, hipótesis y pruebas",
+      "mlops": "Docker y despliegue inicial"
+    },
+    {
+      "week": 7,
+      "startReference": "7 / 14/12",
+      "ds": "Métricas, CV, calibración",
+      "me": "Pytest + FastAPI",
+      "ai": "Entrenamiento PyTorch",
+      "ga": "Retrieval avanzado",
+      "fundamentals": "Derivadas y regla de la cadena",
+      "mlops": "Airflow, ETL y Postgres"
+    },
+    {
+      "week": 8,
+      "startReference": "8 / 21/12",
+      "ds": "Ensembles y comparación",
+      "me": "Docker + CI/CD",
+      "ai": "CNN, baseline y errores",
+      "ga": "Evals y grounding RAG",
+      "fundamentals": "Gradientes y optimización en redes",
+      "mlops": "GitHub Actions y Docker Hub"
+    },
+    {
+      "week": 9,
+      "startReference": "9 / 28/12",
+      "ds": "PCA, clustering",
+      "me": "Orquestación y backfill",
+      "ai": "NLP/feature baseline",
+      "ga": "Workflows y ReAct",
+      "fundamentals": "Reducción dimensional y álgebra aplicada",
+      "mlops": "Proyecto ML completo con despliegue"
+    },
+    {
+      "week": 10,
+      "startReference": "10 / 04/01",
+      "ds": "Hipótesis / experimento",
+      "me": "Deployment",
+      "ai": "Attention y Transformers",
+      "ga": "Memoria, HITL y agentes",
+      "fundamentals": "Código modular, tests y documentación",
+      "mlops": "AWS, Azure o SageMaker según proyecto"
+    },
+    {
+      "week": 11,
+      "startReference": "11 / 11/01",
+      "ds": "Caso DS de portfolio",
+      "me": "Observabilidad y seguridad",
+      "ai": "Modelos preentrenados",
+      "ga": "MCP, métricas y trazas",
+      "fundamentals": "Fundamentos de sistemas y arquitectura",
+      "mlops": "Grafana y monitoreo"
+    },
+    {
+      "week": 12,
+      "startReference": "12 / 18/01",
+      "ds": "Reevaluar y comunicar",
+      "me": "Runbook y checklist producción",
+      "ai": "Capstone y análisis de fallos",
+      "ga": "Seguridad, evals y release",
+      "fundamentals": "Repaso y evidencia de fundamentos",
+      "mlops": "LLMOps y cierre reproducible"
+    }
+  ],
+  "portfolio": [
+    {
+      "id": "p1",
+      "name": "P1 · Data Science Lab",
+      "capabilities": "DS01–DS14 y matemáticas aplicadas",
+      "acceptance": "EDA → baseline → CV sin leakage → model card"
+    },
+    {
+      "id": "p2",
+      "name": "P2 · ML System",
+      "capabilities": "ME01–ME17 a partir del baseline DS",
+      "acceptance": "ETL reproducible + tracking + API + tests/CI + Docker"
+    },
+    {
+      "id": "p3",
+      "name": "P3 · Deep Learning Lab",
+      "capabilities": "AI01–AI16 y MLE",
+      "acceptance": "Modelo PyTorch/Keras + comparación de arquitecturas y errores"
+    },
+    {
+      "id": "p4",
+      "name": "P4 · GenAI Application",
+      "capabilities": "GA01–GA17 y seguridad/observabilidad",
+      "acceptance": "RAG evaluado → tools/agent optativo → métricas + runbook"
+    }
+  ],
+  "curricula": [
+    {
+      "id": "futura",
+      "name": "Futura Data Scientist",
+      "modules": [
+        {
+          "id": "futura-m1",
+          "name": "Python para Data Science",
+          "liveHours": 24,
+          "classes": [
+            {
+              "id": "futura-m1-c01",
+              "number": 1,
+              "title": "Bienvenida al Programa Data Science"
+            },
+            {
+              "id": "futura-m1-c02",
+              "number": 2,
+              "title": "Introducción a Python, entornos virtuales CONDA y tipos de datos"
+            },
+            {
+              "id": "futura-m1-c03",
+              "number": 3,
+              "title": "Estructura de control I"
+            },
+            {
+              "id": "futura-m1-c04",
+              "number": 4,
+              "title": "Estructura de control II"
+            },
+            {
+              "id": "futura-m1-c05",
+              "number": 5,
+              "title": "Funciones"
+            },
+            {
+              "id": "futura-m1-c06",
+              "number": 6,
+              "title": "POO"
+            },
+            {
+              "id": "futura-m1-c07",
+              "number": 7,
+              "title": "NumPy"
+            },
+            {
+              "id": "futura-m1-c08",
+              "number": 8,
+              "title": "Pandas - Parte 1"
+            },
+            {
+              "id": "futura-m1-c09",
+              "number": 9,
+              "title": "Pandas - Parte 2"
+            },
+            {
+              "id": "futura-m1-c10",
+              "number": 10,
+              "title": "Visualización de Datos"
+            },
+            {
+              "id": "futura-m1-c11",
+              "number": 11,
+              "title": "Introducción a Web Scraping"
+            },
+            {
+              "id": "futura-m1-c12",
+              "number": 12,
+              "title": "Métodos de Web Scraping"
+            }
+          ]
+        },
+        {
+          "id": "futura-m2",
+          "name": "Estadística y Análisis Multivariante",
+          "liveHours": 22,
+          "classes": [
+            {
+              "id": "futura-m2-c01",
+              "number": 1,
+              "title": "Estadística Descriptiva e inicios de EDA"
+            },
+            {
+              "id": "futura-m2-c02",
+              "number": 2,
+              "title": "Probabilidades y Distribuciones I"
+            },
+            {
+              "id": "futura-m2-c03",
+              "number": 3,
+              "title": "Probabilidades y Distribuciones II"
+            },
+            {
+              "id": "futura-m2-c04",
+              "number": 4,
+              "title": "Estadística Inferencial y Pruebas de Hipótesis I"
+            },
+            {
+              "id": "futura-m2-c05",
+              "number": 5,
+              "title": "Estadística Inferencial y Pruebas de Hipótesis II"
+            },
+            {
+              "id": "futura-m2-c06",
+              "number": 6,
+              "title": "Análisis multivariante"
+            },
+            {
+              "id": "futura-m2-c07",
+              "number": 7,
+              "title": "Reducción Dimensionalidad PCA (teoría)"
+            },
+            {
+              "id": "futura-m2-c08",
+              "number": 8,
+              "title": "Reducción Dimensionalidad PCA (práctica 1)"
+            },
+            {
+              "id": "futura-m2-c09",
+              "number": 9,
+              "title": "Reducción Dimensionalidad PCA (práctica 2)"
+            },
+            {
+              "id": "futura-m2-c10",
+              "number": 10,
+              "title": "Reducción Dimensionalidad MCA (teoría)"
+            },
+            {
+              "id": "futura-m2-c11",
+              "number": 11,
+              "title": "Reducción Dimensionalidad MCA (práctica)"
+            }
+          ]
+        },
+        {
+          "id": "futura-m3",
+          "name": "Feature Engineering",
+          "liveHours": 8,
+          "classes": [
+            {
+              "id": "futura-m3-c01",
+              "number": 1,
+              "title": "Principios del procesamiento de datos y Feature Engineering"
+            },
+            {
+              "id": "futura-m3-c02",
+              "number": 2,
+              "title": "Aplicación práctica I – Funnel de modelamiento, limpieza y split"
+            },
+            {
+              "id": "futura-m3-c03",
+              "number": 3,
+              "title": "Aplicación práctica II – Balanceo de clases y creación de nuevas variables"
+            },
+            {
+              "id": "futura-m3-c04",
+              "number": 4,
+              "title": "Aplicación práctica III – Feature Selection"
+            }
+          ]
+        },
+        {
+          "id": "futura-m4",
+          "name": "Machine Learning",
+          "liveHours": 18,
+          "classes": [
+            {
+              "id": "futura-m4-c01",
+              "number": 1,
+              "title": "Introducción al Machine Learning"
+            },
+            {
+              "id": "futura-m4-c02",
+              "number": 2,
+              "title": "Aprendizaje Supervisado - Regresión Lineal y Múltiple"
+            },
+            {
+              "id": "futura-m4-c03",
+              "number": 3,
+              "title": "Aprendizaje Supervisado - Regularizaciones, Decision Tree & Random Forest"
+            },
+            {
+              "id": "futura-m4-c04",
+              "number": 4,
+              "title": "Aprendizaje Supervisado - Modelos de Clasificación (teoría)"
+            },
+            {
+              "id": "futura-m4-c05",
+              "number": 5,
+              "title": "Aprendizaje Supervisado - Modelos de Clasificación (práctica)"
+            },
+            {
+              "id": "futura-m4-c06",
+              "number": 6,
+              "title": "Aprendizaje No Supervisado - Clustering Parte 1"
+            },
+            {
+              "id": "futura-m4-c07",
+              "number": 7,
+              "title": "Aprendizaje No Supervisado - Clustering Parte 2"
+            },
+            {
+              "id": "futura-m4-c08",
+              "number": 8,
+              "title": "Market Basket Analysis e introducción a Sistemas de Recomendación"
+            },
+            {
+              "id": "futura-m4-c09",
+              "number": 9,
+              "title": "Support Vector Machine (SVM) y modelos Boosting"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "anyoneai",
+      "name": "AnyoneAI ML Engineer",
+      "items": [
+        {
+          "id": "anyoneai-01",
+          "number": "1",
+          "module": "PREP COURSE",
+          "title": "Python Programming Fundamentals: Anaconda Setup, Data Types, Control Flow, Functions, and Classes."
+        },
+        {
+          "id": "anyoneai-02",
+          "number": "2",
+          "module": "PREP COURSE",
+          "title": "Mastering NumPy: Array Creation, Manipulation, and Storage."
+        },
+        {
+          "id": "anyoneai-03",
+          "number": "3",
+          "module": "PREP COURSE",
+          "title": "Data Manipulation and Analysis with Pandas: From Series and DataFrames to Advanced Functions and Visualizations."
+        },
+        {
+          "id": "anyoneai-04",
+          "number": "1",
+          "module": "SPRINT 1",
+          "title": "Data Integration and Transformation: Extracting and Manipulating Data from CSV files, Databases, and APIs."
+        },
+        {
+          "id": "anyoneai-05",
+          "number": "2",
+          "module": "SPRINT 1",
+          "title": "Building Robust Data Pipelines: ELT/ETL Strategies, Data Architecture, and Orchestration Techniques."
+        },
+        {
+          "id": "anyoneai-06",
+          "number": "3",
+          "module": "SPRINT 1",
+          "title": "Exploring Data with Descriptive Statistics and Visualization: Techniques for Analyzing and Presenting Data."
+        },
+        {
+          "id": "anyoneai-07",
+          "number": "1",
+          "module": "SPRINT 2",
+          "title": "Preparing Data for Analysis: Feature Engineering Techniques for Handling Diverse Data Types."
+        },
+        {
+          "id": "anyoneai-08",
+          "number": "2",
+          "module": "SPRINT 2",
+          "title": "Foundations of Machine Learning: Techniques for Regression, Classification, and Model Evaluation."
+        },
+        {
+          "id": "anyoneai-09",
+          "number": "3",
+          "module": "SPRINT 2",
+          "title": "Advanced Machine Learning: Ensemble Techniques for Improved Model Performance."
+        },
+        {
+          "id": "anyoneai-10",
+          "number": "4",
+          "module": "SPRINT 2",
+          "title": "Unsupervised Learning: Clustering Techniques and Dimensionality Reduction with PCA."
+        },
+        {
+          "id": "anyoneai-11",
+          "number": "1",
+          "module": "SPRINT 3",
+          "title": "Building Scalable Machine Learning Applications: Microservices, Containers, APIs, and Cloud Deployment."
+        },
+        {
+          "id": "anyoneai-12",
+          "number": "1",
+          "module": "SPRINT 4",
+          "title": "Foundations of Neural Networks: From Biological Neurons to Basic Architecture and Regularization Techniques."
+        },
+        {
+          "id": "anyoneai-13",
+          "number": "2",
+          "module": "SPRINT 4",
+          "title": "Deep Learning for Image Classification: Convolutional Neural Networks, Optimization Algorithms, and Architectures."
+        },
+        {
+          "id": "anyoneai-14",
+          "number": "1",
+          "module": "SPRINT 5",
+          "title": "Natural Language Processing Basics: Techniques for Text Normalization, Tokenization, and Feature Extraction."
+        },
+        {
+          "id": "anyoneai-15",
+          "number": "2",
+          "module": "SPRINT 5",
+          "title": "Deep Learning for Sequences: Recurrent Neural Networks and Long Short-Term Memory."
+        },
+        {
+          "id": "anyoneai-16",
+          "number": "3",
+          "module": "SPRINT 5",
+          "title": "State of the Art Natural Language Processing: Attention Mechanisms, Transformer Architecture, and BERT."
+        },
+        {
+          "id": "anyoneai-17",
+          "number": "4",
+          "module": "SPRINT 5",
+          "title": "LLMs and Prompt Engineering: GPT Family. Interacting with an LLM. Zero Shot, Few Shot, Chain Of Thought."
+        },
+        {
+          "id": "anyoneai-18",
+          "number": "1",
+          "module": "FINAL PROJECT",
+          "title": "Designing and Implementing an AI Powered Machine Learning Solution for Prospective Company or Project Name."
+        },
+        {
+          "id": "anyoneai-19",
+          "number": "1",
+          "module": "GRADUATION",
+          "title": "Demo Days and Technical Interview Practices."
+        }
+      ]
+    },
+    {
+      "id": "ibm-ai",
+      "name": "IBM AI Engineering",
+      "items": [
+        {
+          "id": "ibm-ai-01",
+          "number": "1",
+          "module": "IBM AI Eng",
+          "title": "Machine Learning with Python"
+        },
+        {
+          "id": "ibm-ai-02",
+          "number": "2",
+          "module": "IBM AI Eng",
+          "title": "Introduction to Deep Learning and Neural Networks with Keras"
+        },
+        {
+          "id": "ibm-ai-03",
+          "number": "3",
+          "module": "IBM AI Eng",
+          "title": "Deep Learning with Keras and TensorFlow"
+        },
+        {
+          "id": "ibm-ai-04",
+          "number": "4",
+          "module": "IBM AI Eng",
+          "title": "Introduction to Neural Networks and PyTorch"
+        },
+        {
+          "id": "ibm-ai-05",
+          "number": "5",
+          "module": "IBM AI Eng",
+          "title": "Deep Learning with PyTorch"
+        },
+        {
+          "id": "ibm-ai-06",
+          "number": "6",
+          "module": "IBM AI Eng",
+          "title": "AI Capstone Project with Deep Learning"
+        },
+        {
+          "id": "ibm-ai-07",
+          "number": "7",
+          "module": "IBM AI Eng",
+          "title": "Generative AI and LLMs Architecture and Data Preparation"
+        },
+        {
+          "id": "ibm-ai-08",
+          "number": "8",
+          "module": "IBM AI Eng",
+          "title": "Gen AI Foundational Models for NLP and Language Understanding"
+        },
+        {
+          "id": "ibm-ai-09",
+          "number": "9",
+          "module": "IBM AI Eng",
+          "title": "Generative AI Language Modeling with Transformers"
+        },
+        {
+          "id": "ibm-ai-10",
+          "number": "10",
+          "module": "IBM AI Eng",
+          "title": "Generative AI Engineering and Fine Tuning Transformers"
+        },
+        {
+          "id": "ibm-ai-11",
+          "number": "11",
+          "module": "IBM AI Eng",
+          "title": "Generative AI Advanced Fine Tuning for LLMs"
+        },
+        {
+          "id": "ibm-ai-12",
+          "number": "12",
+          "module": "IBM AI Eng",
+          "title": "Fundamentals of AI Agents Using RAG and LangChain"
+        },
+        {
+          "id": "ibm-ai-13",
+          "number": "13",
+          "module": "IBM AI Eng",
+          "title": "Project Generative AI Applications with RAG and LangChain"
+        }
+      ]
+    },
+    {
+      "id": "codigo-facilito",
+      "name": "Código Facilito AI Engineer",
+      "items": [
+        {
+          "id": "codigo-facilito-01",
+          "number": "1",
+          "module": "M1 Fundamentos",
+          "title": "Setup profesional y Hello AI System"
+        },
+        {
+          "id": "codigo-facilito-02",
+          "number": "2",
+          "module": "M1 Fundamentos",
+          "title": "Tokens contexto costo y latencia"
+        },
+        {
+          "id": "codigo-facilito-03",
+          "number": "3",
+          "module": "M1 Fundamentos",
+          "title": "Prompt engineering para sistemas"
+        },
+        {
+          "id": "codigo-facilito-04",
+          "number": "4",
+          "module": "M1 Fundamentos",
+          "title": "Outputs estructurados y contratos Pydantic y Function calling"
+        },
+        {
+          "id": "codigo-facilito-05",
+          "number": "1",
+          "module": "M2 RAG y memoria",
+          "title": "RAG Foundations Embeddings Ingesta Chunking y Vector DB"
+        },
+        {
+          "id": "codigo-facilito-06",
+          "number": "2",
+          "module": "M2 RAG y memoria",
+          "title": "RAG avanzado Hybrid search multi query reranking y compression"
+        },
+        {
+          "id": "codigo-facilito-07",
+          "number": "3",
+          "module": "M2 RAG y memoria",
+          "title": "RAG en producción Actualización permisos caching y calidad"
+        },
+        {
+          "id": "codigo-facilito-08",
+          "number": "4",
+          "module": "M2 RAG y memoria",
+          "title": "Ejecución local Cloud vs OSS y trade offs"
+        },
+        {
+          "id": "codigo-facilito-09",
+          "number": "1",
+          "module": "M3 Agentes",
+          "title": "De workflows a agentes Tools estado y control"
+        },
+        {
+          "id": "codigo-facilito-10",
+          "number": "2",
+          "module": "M3 Agentes",
+          "title": "ReAct Agents"
+        },
+        {
+          "id": "codigo-facilito-11",
+          "number": "3",
+          "module": "M3 Agentes",
+          "title": "Multiagentes con LangGraph Supervisor workers y handoffs"
+        },
+        {
+          "id": "codigo-facilito-12",
+          "number": "4",
+          "module": "M3 Agentes",
+          "title": "Memoria persistente Human in the loop HITL y auditoría"
+        },
+        {
+          "id": "codigo-facilito-13",
+          "number": "1",
+          "module": "M4 Producción",
+          "title": "MCP en una sesión"
+        },
+        {
+          "id": "codigo-facilito-14",
+          "number": "2",
+          "module": "M4 Producción",
+          "title": "Testing y Reliability para AI Systems"
+        },
+        {
+          "id": "codigo-facilito-15",
+          "number": "3",
+          "module": "M4 Producción",
+          "title": "Evals para RAGAgents y DSPy como toolbox de optimización"
+        },
+        {
+          "id": "codigo-facilito-16",
+          "number": "4",
+          "module": "M4 Producción",
+          "title": "Producción Observabilidad seguridad y deploy"
+        }
+      ]
+    },
+    {
+      "id": "krish-mlops",
+      "name": "Krish MLOps Bootcamp",
+      "items": [
+        {
+          "id": "krish-mlops-01",
+          "number": 1,
+          "module": "MLOps Bootcamp",
+          "title": "Git and Github"
+        },
+        {
+          "id": "krish-mlops-02",
+          "number": 2,
+          "module": "MLOps Bootcamp",
+          "title": "Complete MLFLOW Tutorials"
+        },
+        {
+          "id": "krish-mlops-03",
+          "number": 3,
+          "module": "MLOps Bootcamp",
+          "title": "ML Project Integration With MLFLOW Tracking"
+        },
+        {
+          "id": "krish-mlops-04",
+          "number": 4,
+          "module": "MLOps Bootcamp",
+          "title": "Deep Learning ANN Model Building Integration With MLFLOW"
+        },
+        {
+          "id": "krish-mlops-05",
+          "number": 5,
+          "module": "MLOps Bootcamp",
+          "title": "Getting Started With DVC- Data Version Control"
+        },
+        {
+          "id": "krish-mlops-06",
+          "number": 6,
+          "module": "MLOps Bootcamp",
+          "title": "Getting Started With Dagshub"
+        },
+        {
+          "id": "krish-mlops-07",
+          "number": 7,
+          "module": "MLOps Bootcamp",
+          "title": "End To End Machine Learning Pipeline Using GIT, DVC,MLFLOW And DAGSHUB"
+        },
+        {
+          "id": "krish-mlops-08",
+          "number": 8,
+          "module": "MLOps Bootcamp",
+          "title": "MLFLOW With AWS Cloud"
+        },
+        {
+          "id": "krish-mlops-09",
+          "number": 9,
+          "module": "MLOps Bootcamp",
+          "title": "Complete Basic To Advance Dockers"
+        },
+        {
+          "id": "krish-mlops-10",
+          "number": 10,
+          "module": "MLOps Bootcamp",
+          "title": "Getting Started With Airflow"
+        },
+        {
+          "id": "krish-mlops-11",
+          "number": 11,
+          "module": "MLOps Bootcamp",
+          "title": "Airflow ETL Pipeline with Postgres and API Integration In ASTRO Cloud And AWS"
+        },
+        {
+          "id": "krish-mlops-12",
+          "number": 12,
+          "module": "MLOps Bootcamp",
+          "title": "Introduction To Github Actions"
+        },
+        {
+          "id": "krish-mlops-13",
+          "number": 13,
+          "module": "MLOps Bootcamp",
+          "title": "End To End Github Action Workflow Project With Dockerhub"
+        },
+        {
+          "id": "krish-mlops-14",
+          "number": 14,
+          "module": "MLOps Bootcamp",
+          "title": "Getting Started With Your First End To End Data Science Project With Deployment"
+        },
+        {
+          "id": "krish-mlops-15",
+          "number": 15,
+          "module": "MLOps Bootcamp",
+          "title": "End To End MLOPS Projects With ETL Pipelines- Building Network Security System"
+        },
+        {
+          "id": "krish-mlops-16",
+          "number": 16,
+          "module": "MLOps Bootcamp",
+          "title": "End To End DS Project Implementation With Mulitple AWS,Azure Deployment"
+        },
+        {
+          "id": "krish-mlops-17",
+          "number": 17,
+          "module": "MLOps Bootcamp",
+          "title": "End To End NLP Project With HuggingFace And Transformers"
+        },
+        {
+          "id": "krish-mlops-18",
+          "number": 18,
+          "module": "MLOps Bootcamp",
+          "title": "Build, Train ,Deploy And Create Endpoints For ML Project Using AWS Sagemaker"
+        },
+        {
+          "id": "krish-mlops-19",
+          "number": 19,
+          "module": "MLOps Bootcamp",
+          "title": "Grafana-Open Source Tool For Data Visualization And Monitoring"
+        },
+        {
+          "id": "krish-mlops-20",
+          "number": 20,
+          "module": "MLOps Bootcamp",
+          "title": "Generative AI Series With AWS LLMOPS"
+        }
+      ]
+    },
+    {
+      "id": "ibm-de",
+      "name": "IBM AI-Native Data Engineering",
+      "items": [
+        {
+          "id": "ibm-de-01",
+          "number": 1,
+          "module": "AI-Native Data Engineering",
+          "title": "Foundations of AI Native Data Engineering",
+          "estimatedHours": 19
+        },
+        {
+          "id": "ibm-de-02",
+          "number": 2,
+          "module": "AI-Native Data Engineering",
+          "title": "AI Systems, Automation, CI/CD and Data Engineering Workflows",
+          "estimatedHours": 19
+        },
+        {
+          "id": "ibm-de-03",
+          "number": 3,
+          "module": "AI-Native Data Engineering",
+          "title": "Vector Databases and Retrieval Data Engineering",
+          "estimatedHours": 22
+        },
+        {
+          "id": "ibm-de-04",
+          "number": 4,
+          "module": "AI-Native Data Engineering",
+          "title": "Lakehouse Architecture for AI-Native Data Platforms",
+          "estimatedHours": 24
+        },
+        {
+          "id": "ibm-de-05",
+          "number": 5,
+          "module": "AI-Native Data Engineering",
+          "title": "Unstructured Data Engineering for AI",
+          "estimatedHours": 24
+        },
+        {
+          "id": "ibm-de-06",
+          "number": 6,
+          "module": "AI-Native Data Engineering",
+          "title": "Reproducible Training Data and ML-Ready Data Pipelines",
+          "estimatedHours": 22
+        },
+        {
+          "id": "ibm-de-07",
+          "number": 7,
+          "module": "AI-Native Data Engineering",
+          "title": "Capstone: Build and Operate an AI-Native Data Platform",
+          "estimatedHours": 25
+        }
+      ]
+    },
+    {
+      "id": "krish-maths",
+      "name": "Krish Mathematics for Data Science and GenAI",
+      "items": [
+        {
+          "id": "krish-maths-01",
+          "number": 1,
+          "module": "Matemáticas y estadística",
+          "title": "Introduction To Linear Algebra"
+        },
+        {
+          "id": "krish-maths-02",
+          "number": 2,
+          "module": "Matemáticas y estadística",
+          "title": "Introduction To Functions And Transformation"
+        },
+        {
+          "id": "krish-maths-03",
+          "number": 3,
+          "module": "Matemáticas y estadística",
+          "title": "Inverse Functions Or Transformation"
+        },
+        {
+          "id": "krish-maths-04",
+          "number": 4,
+          "module": "Matemáticas y estadística",
+          "title": "Eigen Vectors And Eigen Values"
+        },
+        {
+          "id": "krish-maths-05",
+          "number": 5,
+          "module": "Matemáticas y estadística",
+          "title": "Equation Of a Line, Plane, Hyperplane"
+        },
+        {
+          "id": "krish-maths-06",
+          "number": 6,
+          "module": "Matemáticas y estadística",
+          "title": "Introduction To Statistics"
+        },
+        {
+          "id": "krish-maths-07",
+          "number": 7,
+          "module": "Matemáticas y estadística",
+          "title": "Descriptive Statistics"
+        },
+        {
+          "id": "krish-maths-08",
+          "number": 8,
+          "module": "Matemáticas y estadística",
+          "title": "Introduction To Probability"
+        },
+        {
+          "id": "krish-maths-09",
+          "number": 9,
+          "module": "Matemáticas y estadística",
+          "title": "Probability Distribution function And Types Of Distribution"
+        },
+        {
+          "id": "krish-maths-10",
+          "number": 10,
+          "module": "Matemáticas y estadística",
+          "title": "Inferential Stats and Hypothesis Testing"
+        },
+        {
+          "id": "krish-maths-11",
+          "number": 11,
+          "module": "Matemáticas y estadística",
+          "title": "Chi Square Test With Solved Examples"
+        },
+        {
+          "id": "krish-maths-12",
+          "number": 12,
+          "module": "Matemáticas y estadística",
+          "title": "Annova Test With Solved Examples"
+        },
+        {
+          "id": "krish-maths-13",
+          "number": 13,
+          "module": "Matemáticas y estadística",
+          "title": "Differential Calculus"
+        },
+        {
+          "id": "krish-maths-14",
+          "number": 14,
+          "module": "Matemáticas y estadística",
+          "title": "Power Rules And Derivative Rules"
+        },
+        {
+          "id": "krish-maths-15",
+          "number": 15,
+          "module": "Matemáticas y estadística",
+          "title": "Product Rules In Derivative"
+        },
+        {
+          "id": "krish-maths-16",
+          "number": 16,
+          "module": "Matemáticas y estadística",
+          "title": "Chain Rule Of Derivatives"
+        },
+        {
+          "id": "krish-maths-17",
+          "number": 17,
+          "module": "Matemáticas y estadística",
+          "title": "Application Of Linear algebra, Stats And Differential Calculus In Data Science"
+        },
+        {
+          "id": "krish-maths-18",
+          "number": 18,
+          "module": "Matemáticas y estadística",
+          "title": "Application Of Linear Algebra In Dimensionality Reduction"
+        },
+        {
+          "id": "krish-maths-19",
+          "number": 19,
+          "module": "Matemáticas y estadística",
+          "title": "Application Of Derivatives In Deep Learning Neural Network"
+        }
+      ]
+    }
+  ]
+}
