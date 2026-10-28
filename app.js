@@ -38,7 +38,7 @@
   function save() { localStorage.setItem(KEY, JSON.stringify(state)); updateSidebar(); }
   function load() {
     const defaults = {
-      version: 3, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
+      version: 4, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
       sequence: {}, projects: [],
       schedule: seedSchedule(), extraEvents: [], daily: {}, activityLog: {}, energy: {}, dailyReviews: {}, weeklyReviews: {}, exams: {}, history: [],
     };
@@ -61,6 +61,18 @@
         merged.cycleStart = DEFAULT_CYCLE_START;
         merged.version = 3;
         localStorage.setItem(KEY, JSON.stringify(merged));
+      }
+      if (Number(merged.version) < 4) {
+        const obsolete = new Set(["Weekly Review|15:30|16:00", "Weekly Planning|16:00|16:30"]);
+        merged.schedule = merged.schedule.filter(item => !(item.weekday === 0 && obsolete.has(`${item.title}|${item.start}|${item.end}`)));
+        if (!merged.schedule.some(item => item.weekday === 0 && item.title === "ML Engineer Weekly Exam")) {
+          merged.schedule.push({ id: "weekly-exam-me", weekday: 0, start: "15:30", end: "16:15", title: "ML Engineer Weekly Exam", category: "recall", counted: true, note: "" });
+        }
+        if (!merged.schedule.some(item => item.weekday === 0 && item.title === "GenAI Weekly Exam")) {
+          merged.schedule.push({ id: "weekly-exam-ga", weekday: 0, start: "16:15", end: "17:00", title: "GenAI Weekly Exam", category: "recall", counted: true, note: "" });
+        }
+        merged.version = 4;
+        try { localStorage.setItem(KEY, JSON.stringify(merged)); } catch { /* Keep the migrated schedule in memory if storage is full. */ }
       }
       return merged;
     } catch { return defaults; }
@@ -93,8 +105,8 @@
     put([6], "20:00", "21:00", "Build Portfolio", "project", true);
     put([0], "14:00", "14:45", "Data Science Weekly Exam", "recall", true);
     put([0], "14:45", "15:30", "AI Engineering Weekly Exam", "recall", true);
-    put([0], "15:30", "16:00", "Weekly Review", "recall", true);
-    put([0], "16:00", "16:30", "Weekly Planning", "recall", true);
+    rows.push({ id: "weekly-exam-me", weekday: 0, start: "15:30", end: "16:15", title: "ML Engineer Weekly Exam", category: "recall", counted: true, note: "" });
+    rows.push({ id: "weekly-exam-ga", weekday: 0, start: "16:15", end: "17:00", title: "GenAI Weekly Exam", category: "recall", counted: true, note: "" });
     return rows;
   }
   function allCompetencies(route) { return [...route.competencies, ...state.customCompetencies.filter(item => item.routeId === route.id)]; }
@@ -119,7 +131,7 @@
     $$("[data-page]").forEach(el => el.classList.toggle("active", el.dataset.page === next));
     const button = $(`[data-page="${next}"]`), group = button?.closest(".nav-group");
     if (group) { group.classList.add("open"); group.querySelector(".nav-group-toggle").setAttribute("aria-expanded", "true"); }
-    const names = { inicio: "Panel general", competencias: "Mapa de competencias", fuentes: "Fuentes", secuencia: "Secuencia de 12 semanas", portafolio: "Portafolio integrado", evidencias: "Evidencias", metodo: "Método", calendario: "Calendario 80 h", plan: "Plan diario", energia: "Energía", examenes: "Weekly Exam", diaria: "Recall", semanal: "Revisión semanal" };
+    const names = { inicio: "Panel general", competencias: "Mapa de competencias", fuentes: "Fuentes", secuencia: "Secuencia de 12 semanas", portafolio: "Portafolio integrado", evidencias: "Evidencias", metodo: "Método", calendario: "Calendario", plan: "Plan diario", energia: "Energía", examenes: "Weekly Exam", diaria: "Recall", semanal: "Revisión semanal" };
     $("#pageLabel").textContent = names[next];
     $("#sectionLabel").textContent = group ? group.dataset.group : "Inicio";
     $("#sidebar").classList.remove("open");
@@ -136,6 +148,8 @@
   function renderHome() {
     const all = allItems(), shown = all.filter(demonstrated).length, weighted = pct(sum(all.map(level)), all.length * 4);
     const weekly = sum(state.schedule.filter(item => item.counted).map(item => hours(item.start, item.end)));
+    const fitness = sum(state.schedule.filter(item => item.counted && item.category === "fitness").map(item => hours(item.start, item.end)));
+    const formation = Math.max(0, weekly - fitness);
     const thisWeek = currentWeekKey(0), weekEnd = localDate(addDays(atNoon(thisWeek), 7));
     const days = Object.entries(state.daily).filter(([date]) => date >= thisWeek && date < weekEnd).map(([, data]) => data);
     const actual = sum(days.flatMap(day => day.tasks || []).map(task => task.actual));
@@ -143,7 +157,7 @@
     const phases = currentProject?.phases || [], projectProgress = pct(phases.filter(item => item.done).length, phases.length);
     $("#homeMetrics").innerHTML = metric("Avance de competencias", `${weighted}%`, `${shown} demostradas de ${all.length}`, weighted) + metric("Proyecto actual", currentProject ? `${projectProgress}%` : "—", currentProject?.title || "Crea tu proyecto principal", currentProject ? projectProgress : null) + metric("Carga semanal programada", `${weekly.toFixed(1)} h`, "Incluye 6 h de ejercicio; no son horas netas") + metric("Horas reales esta semana", `${actual.toFixed(1)} h`, "Regístralas en Plan diario", pct(actual, weekly));
     $("#homeFocus").innerHTML = seed.routes.map(route => { const next = allCompetencies(route).find(item => item.priority === "P0" && level(item) < 3) || allCompetencies(route).find(item => level(item) < 4); return `<div class="focus-row"><div><strong>${esc(route.name)}</strong><small>${next ? esc(next.id + " · " + (competence(next).title || next.title)) : "Ruta consolidada"}</small></div><span>${routeProgress(route)}%</span></div>`; }).join("");
-    $("#homeLoad").innerHTML = `<p>La referencia de 80 h combina formación, práctica, recall, proyectos, evaluaciones y ejercicio. Protege 23:00–06:00 para dormir y ajusta si el sueño real baja.</p><div class="load-bar"><i style="width:92.5%;background:#3788ec"></i><i style="width:7.5%;background:#be8276"></i></div><div class="load-line"><span>74 h formación y seguimiento</span><span>6 h ejercicio</span></div><div class="alert">Prioriza calidad y recuperación. Si durante dos días seguidos cae el foco, reduce tareas antes de alargar la jornada.</div>`;
+    $("#homeLoad").innerHTML = `<p>La referencia de ${weekly.toFixed(1)} h combina formación, práctica, recall, proyectos, evaluaciones y ejercicio. Protege 23:00–06:00 para dormir y ajusta si el sueño real baja.</p><div class="load-bar"><i style="width:${pct(formation, weekly)}%;background:#3788ec"></i><i style="width:${pct(fitness, weekly)}%;background:#be8276"></i></div><div class="load-line"><span>${formation.toFixed(1)} h formación y seguimiento</span><span>${fitness.toFixed(1)} h ejercicio</span></div><div class="alert">Prioriza calidad y recuperación. Si durante dos días seguidos cae el foco, reduce tareas antes de alargar la jornada.</div>`;
     $("#homeRoutes").innerHTML = seed.routes.map(route => `<article class="route-card"><span class="route-code">${route.id.toUpperCase()} · ${allCompetencies(route).length} COMPETENCIAS</span><h3>${esc(route.name)}</h3><p>${esc(route.purpose)}</p><div class="progress-track"><i style="width:${routeProgress(route)}%;background:${ROUTE_COLORS[route.id]}"></i></div><small>${routeProgress(route)}% avance ponderado</small><br><button class="link-button" data-go="competencias" data-route="${route.id}">Abrir ruta →</button></article>`).join("");
     renderMonthChart();
   }
