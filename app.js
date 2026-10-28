@@ -38,7 +38,7 @@
   function save() { localStorage.setItem(KEY, JSON.stringify(state)); updateSidebar(); }
   function load() {
     const defaults = {
-      version: 4, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
+      version: 5, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
       sequence: {}, projects: [],
       schedule: seedSchedule(), extraEvents: [], daily: {}, activityLog: {}, energy: {}, dailyReviews: {}, weeklyReviews: {}, exams: {}, history: [],
     };
@@ -74,6 +74,17 @@
         merged.version = 4;
         try { localStorage.setItem(KEY, JSON.stringify(merged)); } catch { /* Keep the migrated schedule in memory if storage is full. */ }
       }
+      if (Number(merged.version) < 5) {
+        const meExam = merged.schedule.find(item => item.id === "weekly-exam-me" && item.weekday === 0);
+        const genAiExam = merged.schedule.find(item => item.id === "weekly-exam-ga" && item.weekday === 0);
+        if (meExam?.title === "ML Engineer Weekly Exam" && meExam.start === "15:30" && meExam.end === "16:15") meExam.end = "16:00";
+        if (genAiExam?.title === "GenAI Weekly Exam" && genAiExam.start === "16:15" && genAiExam.end === "17:00") {
+          genAiExam.start = "16:00";
+          genAiExam.end = "16:30";
+        }
+        merged.version = 5;
+        try { localStorage.setItem(KEY, JSON.stringify(merged)); } catch { /* Keep the migrated schedule in memory if storage is full. */ }
+      }
       return merged;
     } catch { return defaults; }
   }
@@ -105,8 +116,8 @@
     put([6], "20:00", "21:00", "Build Portfolio", "project", true);
     put([0], "14:00", "14:45", "Data Science Weekly Exam", "recall", true);
     put([0], "14:45", "15:30", "AI Engineering Weekly Exam", "recall", true);
-    rows.push({ id: "weekly-exam-me", weekday: 0, start: "15:30", end: "16:15", title: "ML Engineer Weekly Exam", category: "recall", counted: true, note: "" });
-    rows.push({ id: "weekly-exam-ga", weekday: 0, start: "16:15", end: "17:00", title: "GenAI Weekly Exam", category: "recall", counted: true, note: "" });
+    rows.push({ id: "weekly-exam-me", weekday: 0, start: "15:30", end: "16:00", title: "ML Engineer Weekly Exam", category: "recall", counted: true, note: "" });
+    rows.push({ id: "weekly-exam-ga", weekday: 0, start: "16:00", end: "16:30", title: "GenAI Weekly Exam", category: "recall", counted: true, note: "" });
     return rows;
   }
   function allCompetencies(route) { return [...route.competencies, ...state.customCompetencies.filter(item => item.routeId === route.id)]; }
