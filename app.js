@@ -35,7 +35,7 @@
   const pct = (part, total) => total ? Math.round(part / total * 100) : 0;
   const sum = values => values.reduce((total, value) => total + (Number(value) || 0), 0);
   function notice(message) { const el = $("#toast"); el.textContent = message; el.classList.add("show"); clearTimeout(notice.timer); notice.timer = setTimeout(() => el.classList.remove("show"), 2600); }
-  function save() { localStorage.setItem(KEY, JSON.stringify(state)); updateSidebar(); }
+  function save() { localStorage.setItem(KEY, JSON.stringify(state)); window.MLCloud?.queueSave(state); updateSidebar(); }
   function load() {
     const defaults = {
       version: 5, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
@@ -501,12 +501,19 @@
     if (el.dataset.recallField) { const id = el.closest("[data-recall-route]")?.dataset.recallRoute; if (id) { ((((state.dailyReviews[planDate] ||= {})[id]) ||= {}))[el.dataset.recallField] = el.value; save(); } return; }
     if (el.dataset.dailyReview) { (state.dailyReviews[planDate] ||= {})[el.dataset.dailyReview] = el.value; save(); return; }
     if (el.dataset.weeklyReview) { (state.weeklyReviews[examWeek()] ||= {})[el.dataset.weeklyReview] = el.value; save(); return; }
-    if (el.id === "importFile") { const file = el.files?.[0]; if (!file) return; file.text().then(text => { const parsed = JSON.parse(text); if (!parsed || !Array.isArray(parsed.projects) || !parsed.competencies || !Array.isArray(parsed.schedule)) throw Error("Formato incompatible"); if (!confirm("¿Reemplazar el progreso local de MLTraining por este respaldo?")) return; localStorage.setItem(KEY, JSON.stringify(parsed)); state = load(); document.documentElement.dataset.theme = state.theme; renderPage(page); updateSidebar(); notice("Respaldo importado."); }).catch(() => notice("No se pudo importar el respaldo.")); el.value = ""; }
+    if (el.id === "importFile") { const file = el.files?.[0]; if (!file) return; file.text().then(text => { const parsed = JSON.parse(text); if (!parsed || !Array.isArray(parsed.projects) || !parsed.competencies || !Array.isArray(parsed.schedule)) throw Error("Formato incompatible"); if (!confirm("¿Reemplazar el progreso de MLTraining por este respaldo y sincronizarlo con Supabase?")) return; state = parsed; save(); state = load(); document.documentElement.dataset.theme = state.theme; renderPage(page); updateSidebar(); notice("Respaldo importado; comprueba el estado de sincronización."); }).catch(() => notice("No se pudo importar el respaldo.")); el.value = ""; }
   }
   async function init() {
     try { const response = await fetch("./mapa.json"); if (!response.ok) throw Error("No se pudo leer el mapa"); seed = await response.json(); }
-    catch { $("#homeFocus").innerHTML = `<div class="alert">No se pudo cargar el mapa de formación. Abre la página desde un servidor web o vuelve a cargarla.</div>`; return; }
-    state = load(); weekStart = currentWeekKey(0); planDate = today(); energyDate = today(); homeMonth = periodForDate(today());
+    catch { $("#publicStatus").textContent = "No se pudo cargar el mapa de formación. Vuelve a cargar la página."; return; }
+    const fallbackState = load();
+    if (!window.MLCloud) { $("#publicStatus").textContent = "No se pudo cargar el sistema de acceso. La edición permanece bloqueada."; return; }
+    const access = await window.MLCloud.boot(seed, fallbackState);
+    if (!access.owner) return;
+    state = access.state || fallbackState;
+    localStorage.setItem(KEY, JSON.stringify(state));
+    state = load();
+    weekStart = currentWeekKey(0); planDate = today(); energyDate = today(); homeMonth = periodForDate(today());
     document.documentElement.dataset.theme = state.theme === "light" ? "light" : "dark";
     $("#todayLabel").textContent = fmtDay(today());
     $("#blockForm").elements.category.innerHTML = Object.entries(CAT).map(([key, [label]]) => `<option value="${key}">${esc(label)}</option>`).join("");

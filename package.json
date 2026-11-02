@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "build:cloud": "esbuild src/cloud.js --bundle --minify --format=iife --target=es2022 --outfile=cloud.bundle.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

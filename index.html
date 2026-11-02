@@ -6,9 +6,22 @@
   <meta name="description" content="José Luis Valderrama Ampuero: formación intensiva en Data Science, ML Engineering y GenAI.">
   <title>José Luis Valderrama Ampuero · Formación intensiva</title>
   <link rel="stylesheet" href="./style.css">
+  <script defer src="./cloud.bundle.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body>
+  <div id="publicApp" class="public-app">
+    <header class="public-topbar"><div class="brand"><span class="brand-mark">JL</span><div><strong>José Luis Valderrama Ampuero</strong><small>Formación intensiva · avance público</small></div></div><button class="secondary-btn" id="ownerLoginButton">Acceso propietario</button></header>
+    <main class="public-main">
+      <div class="section-head"><div><div class="eyebrow">MLTRAINING</div><h1>Progreso de formación</h1></div><p>Resumen verificable de competencias, horas registradas y proyectos. Los registros personales no se publican.</p></div>
+      <p id="publicStatus" class="cloud-message" role="status" aria-live="polite">Cargando progreso…</p>
+      <form id="ownerLoginForm" class="owner-login panel" hidden><h2>Entrar como propietario</h2><p>Usa la cuenta creada en Supabase Authentication. Nunca introduzcas aquí la contraseña de la base de datos.</p><label>Correo<input name="email" type="email" autocomplete="username" required></label><label>Contraseña de Supabase Auth (si configuraste una)<input id="ownerPassword" name="password" type="password" autocomplete="current-password"></label><div class="login-actions"><button type="submit" class="primary-btn">Entrar con contraseña</button><button type="button" id="ownerMagicButton" class="secondary-btn">Enviar enlace de acceso</button></div></form>
+      <div class="metric-grid" id="publicMetrics"></div>
+      <div class="section-head"><h2>Cuatro rutas conectadas</h2></div><div class="route-grid" id="publicRoutes"></div>
+      <div class="section-head public-project-heading"><h2>Proyectos</h2></div><div class="project-grid" id="publicProjects"></div>
+    </main>
+  </div>
+  <div id="ownerApp" hidden>
   <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
     <div class="brand"><span class="brand-mark">JL</span><div><strong>José Luis Valderrama Ampuero</strong><small>Formación intensiva</small></div></div>
     <nav class="side-nav" id="nav">
@@ -24,7 +37,8 @@
     <div class="side-progress"><span>Competencias demostradas</span><strong id="sidebarProgress">0 / 68</strong><div class="progress-track"><i id="sidebarBar"></i></div><small>El nivel 3 o 4 exige una evidencia revisable.</small></div>
   </aside>
   <div class="shell">
-    <header class="topbar"><button class="icon-btn mobile-menu" id="menuButton" aria-label="Abrir menú">☰</button><div class="crumb"><small id="sectionLabel">Inicio</small><strong id="pageLabel">Panel general</strong></div><div class="toolbar"><span class="today" id="todayLabel"></span><button class="icon-btn" id="themeButton" title="Cambiar tema" aria-label="Cambiar tema">◐</button><button class="tool-btn" id="exportButton">↓ <span>Exportar</span></button><button class="tool-btn" id="importButton">↑ <span>Importar</span></button><input type="file" accept="application/json,.json" id="importFile" hidden></div></header>
+    <header class="topbar"><button class="icon-btn mobile-menu" id="menuButton" aria-label="Abrir menú">☰</button><div class="crumb"><small id="sectionLabel">Inicio</small><strong id="pageLabel">Panel general</strong></div><div class="toolbar"><span class="today" id="todayLabel"></span><button class="icon-btn" id="themeButton" title="Cambiar tema" aria-label="Cambiar tema">◐</button><button class="tool-btn" id="exportButton" aria-label="Exportar respaldo">↓ <span>Exportar</span></button><button class="tool-btn" id="importButton" aria-label="Importar respaldo">↑ <span>Importar</span></button><input type="file" accept="application/json,.json" id="importFile" hidden></div></header>
+    <div id="cloudOwnerActions" class="cloud-owner-actions" hidden><span id="cloudStatus" role="status" aria-live="polite">Verificando conexión…</span><button id="cloudBackupButton" class="secondary-btn">Descargar copia local</button><button id="cloudPreviousBackupButton" class="secondary-btn" hidden>Descargar copia anterior</button><button id="cloudUploadButton" class="primary-btn" hidden>Subir copia local</button><button id="cloudLogoutButton" class="secondary-btn">Salir</button></div>
     <main id="main">
       <section class="page" id="page-inicio">
         <h1 class="home-title">Sistema de competencias · 4 rutas</h1>
@@ -54,6 +68,7 @@
     </main>
   </div>
   <dialog id="blockDialog"><form id="blockForm" method="dialog"><div class="dialog-title"><h2 id="blockDialogTitle">Bloque de calendario</h2><button type="button" id="closeBlockDialog" aria-label="Cerrar">×</button></div><input type="hidden" name="id"><label>Actividad<input name="title" maxlength="100" required></label><div class="form-two"><label>Inicio<input name="start" type="time" required></label><label>Fin<input name="end" type="time" required></label></div><div class="form-two"><label>Fecha<input name="date" type="date" required></label><label>Categoría<select name="category"></select></label></div><label class="inline-check"><input name="weekly" type="checkbox"> Repetir cada semana</label><label class="inline-check"><input name="counted" type="checkbox"> Contar como carga semanal</label><label>Nota<input name="note" maxlength="180" placeholder="Objetivo o referencia"></label><div class="block-tracking"><strong>Registro de esta sesión</strong><p>El estado y las horas reales se guardan solo para la fecha seleccionada.</p><div class="form-two"><label class="inline-check"><input name="completed" type="checkbox"> Sesión completada</label><label>Horas reales<input name="actual" type="number" min="0" max="24" step="0.25" value="0"></label></div></div><div class="dialog-actions"><button type="button" class="danger-btn" id="deleteBlockButton">Eliminar</button><button type="button" class="secondary-btn" id="cancelBlockButton">Cancelar</button><button type="submit" class="primary-btn">Guardar bloque</button></div></form></dialog>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
