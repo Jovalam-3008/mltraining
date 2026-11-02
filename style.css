@@ -22,3 +22,5 @@
 .login-actions{display:flex;flex-wrap:wrap;gap:8px}
 .calendar-grid{height:1080px}
 .cal-event.compact{display:flex;align-items:center;padding:3px 5px}
+.month-panel [data-public-period]:disabled{opacity:.4;cursor:not-allowed}
+.public-main .month-panel{margin-bottom:32px}

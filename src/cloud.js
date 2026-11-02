@@ -2,6 +2,7 @@
 
 const { createClient } = require("@supabase/supabase-js");
 const { buildPublicSummary } = require("./public-summary");
+const { addDays, shortDate, periodStartFor, chartModel, chartMarkup } = require("./public-chart");
 
 const SUPABASE_URL = "https://yrutfhxtrakhzqvvumrc.supabase.co";
 const PUBLISHABLE_KEY = "sb_publishable_waLDIkQRmDey99vsiISp7w_62obi46v";
@@ -18,11 +19,18 @@ let blocked = false;
 let migrationRequired = false;
 let owner = false;
 let retryTimer = null;
+let publicSummary = null;
+let publicPeriodStart = null;
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const total = values => values.reduce((sum, value) => sum + (Number(value) || 0), 0);
 const percent = (part, whole) => whole ? Math.round(100 * part / whole) : 0;
+const limaToday = () => {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+};
 
 function status(message, type = "") {
   const target = owner ? $("#cloudStatus") : $("#publicStatus");
@@ -52,6 +60,7 @@ function downloadJSON(data, filename) {
 }
 
 function renderPublic(summary = {}, updatedAt = null) {
+  publicSummary = summary;
   const levels = summary.competencies || {};
   const projects = Array.isArray(summary.projects) ? summary.projects : [];
   const rows = seedMap.routes.map(route => {
@@ -68,6 +77,22 @@ function renderPublic(summary = {}, updatedAt = null) {
     <article class="metric-card"><span>Última actualización</span><strong>${updatedAt ? new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short" }).format(new Date(updatedAt)) : "—"}</strong><small>${updatedAt ? new Intl.DateTimeFormat("es-PE", { hour: "2-digit", minute: "2-digit" }).format(new Date(updatedAt)) : "Aún sin progreso publicado"}</small></article>`;
   $("#publicRoutes").innerHTML = rows.map(row => `<article class="route-card"><h3>${esc(row.name)}</h3><p>${row.count} competencias</p><div class="progress-track"><i style="width:${row.progress}%"></i></div><small>${row.progress}% de avance ponderado</small></article>`).join("");
   $("#publicProjects").innerHTML = projects.length ? projects.map(project => `<article class="project-card"><h3>${esc(project.title)}</h3><p>${project.status === "active" ? "En curso" : project.status === "done" ? "Finalizado" : "Planificado"}</p><div class="progress-track"><i style="width:${Math.max(0, Math.min(100, Number(project.progress) || 0))}%"></i></div><small>${Math.max(0, Math.min(100, Number(project.progress) || 0))}% de fases completas</small></article>`).join("") : `<p class="help">Los proyectos aparecerán cuando se publiquen avances.</p>`;
+  renderPublicChart();
+}
+
+function renderPublicChart() {
+  if (!publicSummary) return;
+  const today = limaToday(), cycleStart = publicSummary.cycleStart || "2026-11-02";
+  if (!publicPeriodStart) publicPeriodStart = periodStartFor(cycleStart, today);
+  const model = chartModel(publicSummary, publicPeriodStart, today);
+  publicPeriodStart = model.start;
+  $("#publicPeriodLabel").textContent = `${shortDate(model.start)} – ${shortDate(model.end)} ${model.end.slice(0, 4)}`;
+  $("#publicMonthSummary").innerHTML = `<span><strong>${model.studied.toFixed(1)} h</strong> estudiadas en el período</span><span><strong>${model.plannedToday.toFixed(1)} h</strong> del plan base para hoy</span><span><strong>${model.studyDays}</strong> días con estudio</span>`;
+  const chart = $("#publicMonthChart");
+  chart.innerHTML = chartMarkup(model);
+  chart.setAttribute("aria-label", `${model.studied.toFixed(1)} horas reales de estudio en el período ${shortDate(model.start)} a ${shortDate(model.end)}; plan base de 84 horas semanales, sin ejercicio.`);
+  $('[data-public-period="prev"]').disabled = model.start <= cycleStart;
+  $('[data-public-period="next"]').disabled = model.start >= periodStartFor(cycleStart, today);
 }
 
 async function readPublic() {
@@ -87,6 +112,13 @@ async function boot(seed, fallbackState) {
   seedMap = seed;
   $("#publicApp").hidden = false;
   $("#ownerApp").hidden = true;
+  $("#publicApp").addEventListener("click", event => {
+    const action = event.target.closest("[data-public-period]")?.dataset.publicPeriod;
+    if (!action || !publicSummary) return;
+    const current = periodStartFor(publicSummary.cycleStart || "2026-11-02", limaToday());
+    publicPeriodStart = action === "current" ? current : addDays(publicPeriodStart || current, action === "prev" ? -28 : 28);
+    renderPublicChart();
+  });
   $("#ownerLoginButton").addEventListener("click", () => { $("#ownerLoginForm").hidden = !$("#ownerLoginForm").hidden; });
   $("#ownerLoginForm").addEventListener("submit", async event => {
     event.preventDefault();
