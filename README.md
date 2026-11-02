@@ -2,7 +2,7 @@
 
 Centro de formación intensiva de José Luis Valderrama Ampuero.
 
-Esta versión estática se publica con GitHub Pages. La rama `feature/supabase-progress` prepara el guardado centralizado en Supabase: solo el propietario autenticado puede editar el estado completo, y los visitantes ven un resumen sin notas personales. La configuración inicial está en [SUPABASE_SETUP.md](./SUPABASE_SETUP.md).
+Esta versión estática se publica con GitHub Pages y guarda el avance en Supabase: solo el propietario autenticado puede editar el estado completo, y los visitantes ven un resumen sin notas personales. La configuración inicial está en [SUPABASE_SETUP.md](./SUPABASE_SETUP.md).
 
 La copia local y la exportación JSON siguen disponibles como respaldo. El avance anterior no se sube automáticamente: el propietario decide cuándo migrarlo.
 
