@@ -38,7 +38,7 @@
   function save() { localStorage.setItem(KEY, JSON.stringify(state)); window.MLCloud?.queueSave(state); updateSidebar(); }
   function load() {
     const defaults = {
-      version: 5, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
+      version: 6, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
       sequence: {}, projects: [],
       schedule: seedSchedule(), extraEvents: [], daily: {}, activityLog: {}, energy: {}, dailyReviews: {}, weeklyReviews: {}, exams: {}, history: [],
     };
@@ -85,6 +85,12 @@
         merged.version = 5;
         try { localStorage.setItem(KEY, JSON.stringify(merged)); } catch { /* Keep the migrated schedule in memory if storage is full. */ }
       }
+      if (Number(merged.version) < 6) {
+        merged.schedule = migrateScheduleV6(merged.schedule);
+        migrateDailyV6(merged);
+        merged.version = 6;
+        try { localStorage.setItem(KEY, JSON.stringify(merged)); } catch { /* Keep the migrated schedule in memory if storage is full. */ }
+      }
       return merged;
     } catch { return defaults; }
   }
@@ -92,11 +98,11 @@
     const rows = [];
     const put = (days, start, end, title, category, counted = false) => days.forEach(weekday => rows.push({ id: `base-${rows.length + 1}`, weekday, start, end, title, category, counted, note: "" }));
     const all = [0, 1, 2, 3, 4, 5, 6], work = [1, 2, 3, 4, 5];
-    put(all, "06:00", "07:00", "Activación", "care");
+    put(all, "06:30", "07:00", "Activación", "care");
     put(all, "08:30", "09:00", "Desayuno", "care");
     put(all, "13:00", "14:00", "Almuerzo", "care");
     put(all, "18:00", "18:30", "Cena", "care");
-    put(all, "22:30", "23:00", "Desactivación", "sleep");
+    put(all, "23:00", "23:30", "Desactivación", "sleep");
     put(work, "07:00", "08:30", "Data Science Core", "ds", true);
     put(work, "09:00", "10:30", "Data Science Core", "ds", true);
     put(work, "10:30", "11:00", "DS Recall", "recall", true);
@@ -104,7 +110,7 @@
     put(work, "14:00", "16:00", "AI Engineering · Deep Practice", "ai", true);
     put(work, "16:00", "16:30", "AI Recall", "recall", true);
     put([1, 2, 4, 5], "16:30", "18:00", "Entrenamiento + ducha", "fitness", true);
-    put([3], "16:30", "18:00", "AI Project · Build", "project", true);
+    put([3], "16:30", "18:00", "Descanso", "sleep");
     put(work, "18:30", "20:30", "GenAI Engineering", "ga", true);
     put(work, "20:30", "21:00", "GenAI Recall", "recall", true);
     put([0, 6], "07:00", "08:30", "MLOps Bootcamp", "me", true);
@@ -112,13 +118,76 @@
     put([0, 6], "11:00", "13:00", "IBM AI-Native Data Engineering", "me", true);
     put([6], "14:00", "16:00", "Matemáticas y Estadística", "math", true);
     put([6], "16:00", "18:00", "Software Engineering", "math", true);
-    put([6], "18:30", "20:00", "Project · Integrate & Debug", "project", true);
-    put([6], "20:00", "21:00", "Build Portfolio", "project", true);
+    put([6], "18:30", "19:30", "Fundamentals Recall", "recall", true);
+    put([6], "19:30", "21:00", "Build Portfolio · Document & Showcase", "project", true);
     put([0], "14:00", "14:45", "Data Science Weekly Exam", "recall", true);
     put([0], "14:45", "15:30", "AI Engineering Weekly Exam", "recall", true);
-    rows.push({ id: "weekly-exam-me", weekday: 0, start: "15:30", end: "16:00", title: "ML Engineer Weekly Exam", category: "recall", counted: true, note: "" });
-    rows.push({ id: "weekly-exam-ga", weekday: 0, start: "16:00", end: "16:30", title: "GenAI Weekly Exam", category: "recall", counted: true, note: "" });
+    rows.push({ id: "weekly-exam-me", weekday: 0, start: "15:30", end: "16:15", title: "ML Engineer Weekly Exam", category: "recall", counted: true, note: "" });
+    rows.push({ id: "weekly-exam-ga", weekday: 0, start: "16:15", end: "17:00", title: "GenAI Weekly Exam", category: "recall", counted: true, note: "" });
+    addScheduleV6(rows);
     return rows;
+  }
+  function addScheduleV6(rows) {
+    const add = (id, weekday, start, end, title, category, counted = false, note = "") => {
+      const overlaps = rows.some(item => item.weekday === weekday && item.start < end && item.end > start);
+      if (!rows.some(item => item.id === id) && !overlaps) rows.push({ id, weekday, start, end, title, category, counted, note });
+    };
+    for (const weekday of [0, 1, 2, 3, 4, 5, 6]) {
+      add(`v6-sleep-morning-${weekday}`, weekday, "06:00", "06:30", "Dormir", "sleep", false, "Continuación del sueño de la noche anterior");
+      add(`v6-sleep-evening-${weekday}`, weekday, "23:30", "23:59", "Dormir", "sleep", false, "Sueño hasta las 06:30");
+    }
+    for (const weekday of [1, 2, 3, 4, 5]) add(`v6-project-${weekday}`, weekday, "21:00", "23:00", weekday === 5 ? "Project · Integrate & Debug" : "Project · Build", "project", true);
+    add("v6-weekly-review", 0, "17:00", "17:30", "Weekly Review", "recall", true);
+    add("v6-weekly-planning", 0, "17:30", "18:00", "Weekly Planning", "recall", true);
+  }
+  function migrateScheduleV6(schedule) {
+    const rows = schedule.map(item => ({ ...item }));
+    const changeDefault = (weekday, start, end, title, category, counted, changes) => {
+      const item = rows.find(row => /^base-\d+$/.test(row.id) && row.weekday === weekday && row.start === start && row.end === end && row.title === title && row.category === category && row.counted === counted);
+      if (item) Object.assign(item, changes);
+    };
+    for (const weekday of [0, 1, 2, 3, 4, 5, 6]) {
+      changeDefault(weekday, "06:00", "07:00", "Activación", "care", false, { start: "06:30" });
+      changeDefault(weekday, "22:30", "23:00", "Desactivación", "sleep", false, { start: "23:00", end: "23:30" });
+    }
+    changeDefault(3, "16:30", "18:00", "AI Project · Build", "project", true, { title: "Descanso", category: "sleep", counted: false });
+    changeDefault(6, "18:30", "20:00", "Project · Integrate & Debug", "project", true, { end: "19:30", title: "Fundamentals Recall", category: "recall" });
+    changeDefault(6, "20:00", "21:00", "Build Portfolio", "project", true, { start: "19:30", title: "Build Portfolio · Document & Showcase" });
+    const me = rows.find(item => item.id === "weekly-exam-me" && item.weekday === 0 && item.title === "ML Engineer Weekly Exam" && item.start === "15:30" && item.end === "16:00");
+    if (me) me.end = "16:15";
+    const ga = rows.find(item => item.id === "weekly-exam-ga" && item.weekday === 0 && item.title === "GenAI Weekly Exam" && item.start === "16:00" && item.end === "16:30");
+    if (ga) { ga.start = "16:15"; ga.end = "17:00"; }
+    addScheduleV6(rows);
+    return rows;
+  }
+  function migrateDailyV6(data) {
+    const oldDefaults = {
+      "AI Project · Build": { planned: 1.5, category: "project" },
+      "Project · Integrate & Debug": { planned: 1.5, category: "project" },
+      "Build Portfolio": { planned: 1, category: "project" },
+      "ML Engineer Weekly Exam": { planned: 0.5, category: "recall" },
+      "GenAI Weekly Exam": { planned: 0.5, category: "recall" },
+    };
+    for (const [date, day] of Object.entries(data.daily)) {
+      if (date < data.cycleStart || !day?.initialized || !Array.isArray(day.tasks)) continue;
+      const weekday = atNoon(date).getDay();
+      const scheduled = data.schedule.filter(item => item.weekday === weekday);
+      day.tasks = day.tasks.filter(task => {
+        const event = scheduled.find(item => item.id === task.eventId), old = oldDefaults[task.title];
+        if (!event || !old || task.category !== old.category || !(/^base-\d+$/.test(task.eventId) || ["weekly-exam-me", "weekly-exam-ga"].includes(task.eventId))) return true;
+        if (task.done || Number(task.actual) > 0) return true;
+        if (task.title === "AI Project · Build" && event.title === "Descanso") return false;
+        if (event.title !== task.title) task.title = event.title;
+        if (Number(task.planned) === old.planned) task.planned = hours(event.start, event.end);
+        task.category = event.category;
+        return true;
+      });
+      const present = new Set(day.tasks.map(task => task.eventId));
+      for (const event of scheduled.filter(item => item.counted && item.id.startsWith("v6-") && !present.has(item.id))) {
+        const tracked = data.activityLog[date]?.[event.id] || {};
+        day.tasks.push({ id: uid("task"), eventId: event.id, title: event.title, planned: hours(event.start, event.end), actual: Number(tracked.actual) || 0, done: !!tracked.done, category: event.category });
+      }
+    }
   }
   function allCompetencies(route) { return [...route.competencies, ...state.customCompetencies.filter(item => item.routeId === route.id)]; }
   function competence(item) { return state.competencies[item.id] || {}; }
@@ -166,9 +235,9 @@
     const actual = sum(days.flatMap(day => day.tasks || []).map(task => task.actual));
     const currentProject = state.projects.find(item => item.bucket === "principal" && item.status === "active") || state.projects.find(item => item.bucket === "principal") || state.projects.find(item => item.status === "active") || state.projects[0];
     const phases = currentProject?.phases || [], projectProgress = pct(phases.filter(item => item.done).length, phases.length);
-    $("#homeMetrics").innerHTML = metric("Avance de competencias", `${weighted}%`, `${shown} demostradas de ${all.length}`, weighted) + metric("Proyecto actual", currentProject ? `${projectProgress}%` : "—", currentProject?.title || "Crea tu proyecto principal", currentProject ? projectProgress : null) + metric("Carga semanal programada", `${weekly.toFixed(1)} h`, "Incluye 6 h de ejercicio; no son horas netas") + metric("Horas reales esta semana", `${actual.toFixed(1)} h`, "Regístralas en Plan diario", pct(actual, weekly));
+    $("#homeMetrics").innerHTML = metric("Avance de competencias", `${weighted}%`, `${shown} demostradas de ${all.length}`, weighted) + metric("Proyecto actual", currentProject ? `${projectProgress}%` : "—", currentProject?.title || "Crea tu proyecto principal", currentProject ? projectProgress : null) + metric("Carga semanal programada", `${weekly.toFixed(1)} h`, `Incluye ${fitness.toFixed(1)} h de ejercicio; no son horas netas`) + metric("Horas reales esta semana", `${actual.toFixed(1)} h`, "Regístralas en Plan diario", pct(actual, weekly));
     $("#homeFocus").innerHTML = seed.routes.map(route => { const next = allCompetencies(route).find(item => item.priority === "P0" && level(item) < 3) || allCompetencies(route).find(item => level(item) < 4); return `<div class="focus-row"><div><strong>${esc(route.name)}</strong><small>${next ? esc(next.id + " · " + (competence(next).title || next.title)) : "Ruta consolidada"}</small></div><span>${routeProgress(route)}%</span></div>`; }).join("");
-    $("#homeLoad").innerHTML = `<p>La referencia de ${weekly.toFixed(1)} h combina formación, práctica, recall, proyectos, evaluaciones y ejercicio. Protege 23:00–06:00 para dormir y ajusta si el sueño real baja.</p><div class="load-bar"><i style="width:${pct(formation, weekly)}%;background:#3788ec"></i><i style="width:${pct(fitness, weekly)}%;background:#be8276"></i></div><div class="load-line"><span>${formation.toFixed(1)} h formación y seguimiento</span><span>${fitness.toFixed(1)} h ejercicio</span></div><div class="alert">Prioriza calidad y recuperación. Si durante dos días seguidos cae el foco, reduce tareas antes de alargar la jornada.</div>`;
+    $("#homeLoad").innerHTML = `<p>La referencia de ${weekly.toFixed(1)} h combina formación, práctica, recall, proyectos, evaluaciones y ejercicio. El horario reserva 23:30–06:30 para dormir (7 h); registra el sueño real y ajusta si baja.</p><div class="load-bar"><i style="width:${pct(formation, weekly)}%;background:#3788ec"></i><i style="width:${pct(fitness, weekly)}%;background:#be8276"></i></div><div class="load-line"><span>${formation.toFixed(1)} h formación y seguimiento</span><span>${fitness.toFixed(1)} h ejercicio</span></div><div class="alert">Esta carga es muy exigente. Prioriza calidad y recuperación: si durante dos días seguidos cae el foco, reduce tareas antes de alargar la jornada.</div>`;
     $("#homeRoutes").innerHTML = seed.routes.map(route => `<article class="route-card"><span class="route-code">${route.id.toUpperCase()} · ${allCompetencies(route).length} COMPETENCIAS</span><h3>${esc(route.name)}</h3><p>${esc(route.purpose)}</p><div class="progress-track"><i style="width:${routeProgress(route)}%;background:${ROUTE_COLORS[route.id]}"></i></div><small>${routeProgress(route)}% avance ponderado</small><br><button class="link-button" data-go="competencias" data-route="${route.id}">Abrir ruta →</button></article>`).join("");
     renderMonthChart();
   }
@@ -298,16 +367,17 @@
     selected("Head").innerHTML = `<div>GMT−05</div>` + dates.map((date, i) => `<div class="${date === today() ? "is-today" : ""}">${SHORT_DAYS[i]}<strong>${atNoon(date).getDate()}</strong></div>`).join("");
     const axis = `<div class="time-axis">${Array.from({ length: 18 }, (_, i) => `<span style="top:${i * 60}px">${String(i + 6).padStart(2, "0")}:00</span>`).join("")}</div>`;
     selected("Grid").innerHTML = axis + dates.map(date => {
-      const blocks = eventsForDate(date).filter(item => minutes(item.end) > 360 && minutes(item.start) < 1380);
-      const now = date === today() && minutes(`${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`) >= 360 && minutes(`${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`) <= 1380 ? `<div class="now-line" style="top:${(new Date().getHours() - 6) * 60 + new Date().getMinutes()}px"></div>` : "";
-      return `<div class="day-column" data-calendar-date="${date}">${blocks.map(item => { const top = Math.max(0, minutes(item.start) - 360), bottom = Math.min(1020, minutes(item.end) - 360), height = Math.max(14, bottom - top - 2), tracked = trackingFor(date, item.id); return `<button class="cal-event ${item.counted ? "" : "muted"} ${tracked.done ? "completed" : ""}" style="top:${top}px;height:${height}px;--event-color:${CAT[item.category]?.[1] || CAT.personal[1]}" data-block-id="${esc(item.id)}" data-block-date="${date}" title="${esc(item.title)} · ${item.start}–${item.end}${tracked.done ? ` · completado · ${tracked.actual} h reales` : ""}"><strong>${tracked.done ? "✓ " : ""}${esc(item.title)}</strong><small>${item.start}–${item.end}${tracked.actual ? ` · ${tracked.actual} h real` : ""}</small></button>`; }).join("")}${now}</div>`;
+      const blocks = eventsForDate(date).filter(item => minutes(item.end) > 360 && minutes(item.start) < 1440);
+      const now = date === today() && minutes(`${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`) >= 360 ? `<div class="now-line" style="top:${(new Date().getHours() - 6) * 60 + new Date().getMinutes()}px"></div>` : "";
+      return `<div class="day-column" data-calendar-date="${date}">${blocks.map(item => { const top = Math.max(0, minutes(item.start) - 360), bottom = Math.min(1080, minutes(item.end) - 360), height = Math.max(14, bottom - top - 2), compact = minutes(item.end) - minutes(item.start) <= 30, tracked = trackingFor(date, item.id); return `<button class="cal-event ${compact ? "compact" : ""} ${item.counted ? "" : "muted"} ${tracked.done ? "completed" : ""}" style="top:${top}px;height:${height}px;--event-color:${CAT[item.category]?.[1] || CAT.personal[1]}" data-block-id="${esc(item.id)}" data-block-date="${date}" title="${esc(item.title)} · ${item.start}–${item.end}${tracked.done ? ` · completado · ${tracked.actual} h reales` : ""}" aria-label="${esc(item.title)} · ${item.start}–${item.end}${tracked.done ? " · completado" : ""}"><strong>${tracked.done ? "✓ " : ""}${esc(item.title)}</strong>${compact ? "" : `<small>${item.start}–${item.end}${tracked.actual ? ` · ${tracked.actual} h real` : ""}</small>`}</button>`; }).join("")}${now}</div>`;
     }).join("");
   }
   function openBlock(item = null, date = today(), time = "09:00") {
     const form = $("#blockForm"); form.reset();
     form.elements.id.value = item?.id || ""; form.elements.title.value = item?.title || "";
     form.elements.start.value = item?.start || time;
-    form.elements.end.value = item?.end || `${String(Math.min(23, Number(time.slice(0, 2)) + 1)).padStart(2, "0")}:${time.slice(3)}`;
+    const suggestedEnd = Math.min(1439, minutes(time) + 60);
+    form.elements.end.value = item?.end || `${String(Math.floor(suggestedEnd / 60)).padStart(2, "0")}:${String(suggestedEnd % 60).padStart(2, "0")}`;
     form.elements.date.value = date; form.elements.category.value = item?.category || "personal";
     form.elements.weekly.checked = item?.weekly || false; form.elements.counted.checked = item?.counted || false;
     form.elements.note.value = item?.note || "";
@@ -366,11 +436,13 @@
   function examWeek() { return currentWeekKey(reviewOffset); }
   function sourceRoute(curriculum, item) {
     if (["futura", "krish-maths"].includes(curriculum)) return "ds";
+    if (["krish-mlops", "ibm-de"].includes(curriculum)) return "me";
     if (curriculum === "codigo-facilito") return "ga";
     if (curriculum === "anyoneai") {
       const label = `${item.module} ${item.title}`.toLowerCase();
       if (/genai|generative|llm|prompt|rag|agent/.test(label)) return "ga";
       if (/deep learning|neural|pytorch|tensorflow|transformer|nlp/.test(label)) return "ai";
+      if (/deployment|deploy|mlops|pipeline|engineering|docker|api/.test(label)) return "me";
       return "ds";
     }
     if (curriculum === "ibm-ai" && /machine learning with python/i.test(item.title)) return "ds";
@@ -407,13 +479,13 @@
     return { topics: next?.title || "Define aquí los temas que estudiaste esta semana", source: "Foco sugerido; edítalo según tu estudio real" };
   }
   function examPrompt(key, routeId) {
-    const names = { ds: "Data Science", ai: "AI Engineer", ga: "GenAI Engineer" }, record = state.exams[key]?.[routeId] || {}, topics = record.topics?.trim() || weeklyTopics(key, routeId).topics;
-    const criteria = { ds: "formulación, estadística, validación, leakage, métricas e interpretación", ai: "fundamentos de redes, implementación, entrenamiento, debugging y evaluación", ga: "LLM, prompts, RAG, agentes, evaluación, seguridad, costo y latencia" };
+    const names = { ds: "Data Science", me: "ML Engineer", ai: "AI Engineer", ga: "GenAI Engineer" }, record = state.exams[key]?.[routeId] || {}, topics = record.topics?.trim() || weeklyTopics(key, routeId).topics;
+    const criteria = { ds: "formulación, estadística, validación, leakage, métricas e interpretación", me: "pipelines, reproducibilidad, despliegue, CI/CD, datos, monitoreo y depuración", ai: "fundamentos de redes, implementación, entrenamiento, debugging y evaluación", ga: "LLM, prompts, RAG, agentes, evaluación, seguridad, costo y latencia" };
     return `Actúa como examinador exigente de ${names[routeId]}. Evalúame sobre lo que estudié en la semana ${fmtShort(key)}–${fmtShort(localDate(addDays(atNoon(key), 6)))}. Temas:\n${topics}\n\nDiseña un examen avanzado de 45 minutos con 4 preguntas conceptuales, 2 ejercicios aplicados y 1 caso de diagnóstico o debugging. Adapta cada pregunta a los temas indicados; si son escasos, profundiza en ellos sin inventar contenidos que no estudié. Evalúa especialmente ${criteria[routeId]}. No muestres soluciones hasta que responda. Después califica de 0 a 100, explica mis errores, pide una solución mejorada y haz que defienda una respuesta en español y otra en inglés.`;
   }
   function renderExams() {
     const key = examWeek(), dates = `${fmtShort(key)} – ${fmtShort(localDate(addDays(atNoon(key), 6)))}`;
-    $("#examPanel").innerHTML = `<div class="calendar-toolbar"><div><button class="secondary-btn" data-review-nav="prev">‹</button><button class="secondary-btn" data-review-nav="today">Semana actual</button><button class="secondary-btn" data-review-nav="next">›</button><strong>${dates}</strong></div></div><div class="alert">Los temas se actualizan con tu Recall y los avances de Fuentes. Si aún no hay registros, se sugiere la secuencia semanal. Puedes editar la lista antes de generar cada examen.</div>${[["ds", "Data Science"], ["ai", "AI Engineer"], ["ga", "GenAI Engineer"]].map(([id, title]) => { const record = state.exams[key]?.[id] || {}, suggested = weeklyTopics(key, id); return `<article class="exam-card" data-exam="${id}"><div><h2>${title}</h2><p>Examen de 45 min · ${esc(suggested.source)}</p></div><select data-exam-field="status" aria-label="Estado del examen de ${title}"><option value="pending" ${record.status === "pending" ? "selected" : ""}>Pendiente</option><option value="done" ${record.status === "done" ? "selected" : ""}>Realizado</option><option value="review" ${record.status === "review" ? "selected" : ""}>Corregir</option></select><label class="exam-topics">Temas de esta semana (editables)<textarea data-exam-field="topics" placeholder="Un tema por línea">${esc(record.topics ?? suggested.topics)}</textarea></label><button class="secondary-btn" data-exam-quiz="${id}">Copiar prompt de examen</button><input type="number" min="0" max="100" step="1" data-exam-field="score" value="${esc(record.score ?? "")}" placeholder="Puntuación /100" aria-label="Puntuación de ${title}"><textarea data-exam-field="notes" placeholder="Errores, corrección y siguiente práctica" aria-label="Notas de ${title}">${esc(record.notes || "")}</textarea></article>`; }).join("")}`;
+    $("#examPanel").innerHTML = `<div class="calendar-toolbar"><div><button class="secondary-btn" data-review-nav="prev">‹</button><button class="secondary-btn" data-review-nav="today">Semana actual</button><button class="secondary-btn" data-review-nav="next">›</button><strong>${dates}</strong></div></div><div class="alert">Los temas se actualizan con tu Recall y los avances de Fuentes. Si aún no hay registros, se sugiere la secuencia semanal. Puedes editar la lista antes de generar cada examen.</div>${[["ds", "Data Science"], ["me", "ML Engineer"], ["ai", "AI Engineer"], ["ga", "GenAI Engineer"]].map(([id, title]) => { const record = state.exams[key]?.[id] || {}, suggested = weeklyTopics(key, id); return `<article class="exam-card" data-exam="${id}"><div><h2>${title}</h2><p>Examen de 45 min · ${esc(suggested.source)}</p></div><select data-exam-field="status" aria-label="Estado del examen de ${title}"><option value="pending" ${record.status === "pending" ? "selected" : ""}>Pendiente</option><option value="done" ${record.status === "done" ? "selected" : ""}>Realizado</option><option value="review" ${record.status === "review" ? "selected" : ""}>Corregir</option></select><label class="exam-topics">Temas de esta semana (editables)<textarea data-exam-field="topics" placeholder="Un tema por línea">${esc(record.topics ?? suggested.topics)}</textarea></label><button class="secondary-btn" data-exam-quiz="${id}">Copiar prompt de examen</button><input type="number" min="0" max="100" step="1" data-exam-field="score" value="${esc(record.score ?? "")}" placeholder="Puntuación /100" aria-label="Puntuación de ${title}"><textarea data-exam-field="notes" placeholder="Errores, corrección y siguiente práctica" aria-label="Notas de ${title}">${esc(record.notes || "")}</textarea></article>`; }).join("")}`;
   }
   function renderDailyReview() {
     const date = planDate, record = state.dailyReviews[date] || {}, day = ensureDay(date), actual = sum(day.tasks.map(item => item.actual)), done = day.tasks.filter(item => item.done).length;
@@ -451,7 +523,7 @@
     if (button?.dataset.monthNav) { const delta = button.dataset.monthNav === "prev" ? -28 : 28; homeMonth = button.dataset.monthNav === "today" ? periodForDate(today()) : localDate(addDays(atNoon(homeMonth), delta)); if (homeMonth < state.cycleStart) homeMonth = state.cycleStart; renderMonthChart(); return; }
     if (button?.id === "addBlockButton") { openBlock(null, today()); return; }
     if (button?.dataset.blockId) { const item = [...state.schedule, ...state.extraEvents].find(row => row.id === button.dataset.blockId); if (item) openBlock({ ...item, weekly: item.weekday != null }, button.dataset.blockDate); return; }
-    if (target.classList.contains("day-column")) { const rect = target.getBoundingClientRect(), y = Math.max(0, Math.min(1019, event.clientY - rect.top)), minute = 360 + Math.floor(y / 30) * 30, time = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`; openBlock(null, target.dataset.calendarDate, time); return; }
+    if (target.classList.contains("day-column")) { const rect = target.getBoundingClientRect(), y = Math.max(0, Math.min(1079, event.clientY - rect.top)), minute = 360 + Math.floor(y / 30) * 30, time = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`; openBlock(null, target.dataset.calendarDate, time); return; }
     if (button?.id === "closeBlockDialog" || button?.id === "cancelBlockButton") { $("#blockDialog").close(); return; }
     if (button?.id === "deleteBlockButton") { if (confirm("¿Eliminar este bloque?")) deleteBlock(); return; }
     if (button?.id === "planTodayButton") { planDate = today(); planFollowsToday = true; renderPlan(); return; }
@@ -501,7 +573,7 @@
     if (el.dataset.recallField) { const id = el.closest("[data-recall-route]")?.dataset.recallRoute; if (id) { ((((state.dailyReviews[planDate] ||= {})[id]) ||= {}))[el.dataset.recallField] = el.value; save(); } return; }
     if (el.dataset.dailyReview) { (state.dailyReviews[planDate] ||= {})[el.dataset.dailyReview] = el.value; save(); return; }
     if (el.dataset.weeklyReview) { (state.weeklyReviews[examWeek()] ||= {})[el.dataset.weeklyReview] = el.value; save(); return; }
-    if (el.id === "importFile") { const file = el.files?.[0]; if (!file) return; file.text().then(text => { const parsed = JSON.parse(text); if (!parsed || !Array.isArray(parsed.projects) || !parsed.competencies || !Array.isArray(parsed.schedule)) throw Error("Formato incompatible"); if (!confirm("¿Reemplazar el progreso de MLTraining por este respaldo y sincronizarlo con Supabase?")) return; state = parsed; save(); state = load(); document.documentElement.dataset.theme = state.theme; renderPage(page); updateSidebar(); notice("Respaldo importado; comprueba el estado de sincronización."); }).catch(() => notice("No se pudo importar el respaldo.")); el.value = ""; }
+    if (el.id === "importFile") { const file = el.files?.[0]; if (!file) return; file.text().then(text => { const parsed = JSON.parse(text); if (!parsed || !Array.isArray(parsed.projects) || !parsed.competencies || !Array.isArray(parsed.schedule)) throw Error("Formato incompatible"); if (!confirm("¿Reemplazar el progreso de MLTraining por este respaldo y sincronizarlo con Supabase?")) return; localStorage.setItem(KEY, JSON.stringify(parsed)); state = load(); save(); document.documentElement.dataset.theme = state.theme; renderPage(page); updateSidebar(); notice("Respaldo importado; comprueba el estado de sincronización."); }).catch(() => notice("No se pudo importar el respaldo.")); el.value = ""; }
   }
   async function init() {
     try { const response = await fetch("./mapa.json"); if (!response.ok) throw Error("No se pudo leer el mapa"); seed = await response.json(); }
@@ -511,8 +583,10 @@
     const access = await window.MLCloud.boot(seed, fallbackState);
     if (!access.owner) return;
     state = access.state || fallbackState;
+    const cloudVersion = Number(state.version) || 0;
     localStorage.setItem(KEY, JSON.stringify(state));
     state = load();
+    if (state.version > cloudVersion) window.MLCloud.queueSave(state);
     weekStart = currentWeekKey(0); planDate = today(); energyDate = today(); homeMonth = periodForDate(today());
     document.documentElement.dataset.theme = state.theme === "light" ? "light" : "dark";
     $("#todayLabel").textContent = fmtDay(today());
@@ -524,5 +598,6 @@
     $("#todayLabel").dataset.date = today();
     updateSidebar(); showPage(location.hash.slice(1) || "inicio", false);
   }
-  init();
+  if (typeof module !== "undefined" && module.exports) module.exports = { seedSchedule, migrateScheduleV6, migrateDailyV6, sourceRoute };
+  else init();
 })();
