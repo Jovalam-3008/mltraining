@@ -581,8 +581,8 @@
   "hourContract": [
     {
       "area": "Data Science Core (Python + estadística + ML)",
-      "hours": 15.0,
-      "schedule": "L–V 07:00–08:30 y 09:00–10:30"
+      "hours": 20.0,
+      "schedule": "L–V 06:00–08:00 y 08:30–10:30"
     },
     {
       "area": "IBM AI Engineering / Deep Learning",
@@ -591,13 +591,13 @@
     },
     {
       "area": "GenAI Engineering (Código Facilito como fuente)",
-      "hours": 10.0,
-      "schedule": "L–V 18:30–20:30"
+      "hours": 7.5,
+      "schedule": "L–V 18:30–20:00"
     },
     {
       "area": "MLOps Bootcamp (Krish)",
-      "hours": 7.0,
-      "schedule": "S–D 07:00–08:30 y 09:00–11:00"
+      "hours": 8.0,
+      "schedule": "S–D 06:00–08:00 y 08:30–10:30"
     },
     {
       "area": "IBM AI-Native Data Engineering",
@@ -610,34 +610,34 @@
       "schedule": "Sábado 14:00–16:00"
     },
     {
-      "area": "Software Engineering aplicado",
-      "hours": 2.0,
-      "schedule": "Sábado 16:00–18:00"
+      "area": "Recall de ML Engineering",
+      "hours": 1.0,
+      "schedule": "S–D 10:30–11:00"
     },
     {
       "area": "Recuperación activa: DS / AI / GenAI",
       "hours": 7.5,
-      "schedule": "Cada día laborable: 10:30, 16:00 y 20:30; 30 min cada una"
+      "schedule": "L–V 10:30, 16:00 y 20:00; 30 min cada una"
     },
     {
       "area": "Proyectos y portfolio",
-      "hours": 4.0,
-      "schedule": "Mié 16:30–18:00; Sáb 18:30–20:00 y 20:00–21:00"
+      "hours": 9.0,
+      "schedule": "L–V 20:30–22:00; Sáb 18:30–20:00"
     },
     {
-      "area": "Exámenes de DS y AI",
-      "hours": 1.5,
-      "schedule": "Dom 14:00–14:45 y 14:45–15:30"
+      "area": "Cuatro exámenes semanales",
+      "hours": 4.0,
+      "schedule": "Sáb 16:00–18:00: DS y AI; Dom 14:00–16:00: GenAI y ML Engineer"
     },
     {
       "area": "Revisión + planificación",
       "hours": 1.0,
-      "schedule": "Dom 15:30–16:30"
+      "schedule": "Dom 16:00–17:00"
     },
     {
       "area": "Entrenamiento y ducha",
       "hours": 6.0,
-      "schedule": "L, M, J, V 16:30–18:00"
+      "schedule": "L, M, J, V 16:30–18:00. Las comidas son pausas fijas y no contabilizadas"
     }
   ],
   "levels": [

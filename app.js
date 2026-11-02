@@ -24,6 +24,7 @@
   const atNoon = value => new Date(`${value}T12:00:00`);
   const addDays = (date, days) => { const next = new Date(date); next.setDate(next.getDate() + days); return next; };
   const sunday = date => addDays(date, -date.getDay());
+  const monday = date => addDays(date, date.getDay() === 0 ? -6 : 1 - date.getDay());
   const today = () => localDate(new Date());
   const currentWeekKey = offset => localDate(sunday(addDays(atNoon(today()), offset * 7)));
   const hours = (start, end) => Math.max(0, (minutes(end) - minutes(start)) / 60);
@@ -38,7 +39,7 @@
   function save() { localStorage.setItem(KEY, JSON.stringify(state)); window.MLCloud?.queueSave(state); updateSidebar(); }
   function load() {
     const defaults = {
-      version: 6, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
+      version: 7, theme: "dark", cycleStart: DEFAULT_CYCLE_START, competencies: {}, customCompetencies: [], futura: {}, curriculum: {},
       sequence: {}, projects: [],
       schedule: seedSchedule(), extraEvents: [], daily: {}, activityLog: {}, energy: {}, dailyReviews: {}, weeklyReviews: {}, exams: {}, history: [],
     };
@@ -91,10 +92,58 @@
         merged.version = 6;
         try { localStorage.setItem(KEY, JSON.stringify(merged)); } catch { /* Keep the migrated schedule in memory if storage is full. */ }
       }
+      if (Number(merged.version) < 7) {
+        const oldSchedule = merged.schedule;
+        merged.schedule = migrateScheduleV7(oldSchedule);
+        migrateDailyV7(merged, oldSchedule);
+        migrateWeeklyKeysV7(merged);
+        merged.version = 7;
+        try { localStorage.setItem(KEY, JSON.stringify(merged)); } catch { /* Keep the migrated schedule in memory if storage is full. */ }
+      }
       return merged;
     } catch { return defaults; }
   }
+  const MEALS = new Set(["Desayuno", "Almuerzo", "Cena"]);
+  const isMeal = item => MEALS.has(item?.title);
+  const isCounted = item => !!item?.counted && !isMeal(item);
   function seedSchedule() {
+    const rows = [];
+    const put = (days, start, end, title, category, counted = false) => days.forEach(weekday => rows.push({ id: `v7-${weekday}-${rows.length + 1}`, weekday, start, end, title, category, counted, note: "", ...(MEALS.has(title) ? { locked: true } : {}) }));
+    const all = [0, 1, 2, 3, 4, 5, 6], work = [1, 2, 3, 4, 5], weekend = [0, 6];
+    put(all, "05:00", "05:30", "Dormir", "sleep");
+    put(all, "05:30", "06:00", "Activación", "care");
+    put(all, "08:00", "08:30", "Desayuno", "care");
+    put(all, "13:00", "14:00", "Almuerzo", "care");
+    put(all, "18:00", "18:30", "Cena", "care");
+    put(all, "22:00", "22:30", "Desactivación", "sleep");
+    put(all, "22:30", "23:59", "Dormir", "sleep");
+    put(work, "06:00", "08:00", "Data Science Core", "ds", true);
+    put(work, "08:30", "10:30", "Data Science Core", "ds", true);
+    put(work, "10:30", "11:00", "DS Recall", "recall", true);
+    put(work, "11:00", "13:00", "IBM AI Engineering · Deep Work", "ai", true);
+    put(work, "14:00", "16:00", "AI Engineering · Deep Practice", "ai", true);
+    put(work, "16:00", "16:30", "AI Recall", "recall", true);
+    put([1, 2, 4, 5], "16:30", "18:00", "Entrenamiento + ducha", "fitness", true);
+    put([3], "16:30", "18:00", "Descanso", "sleep");
+    put(work, "18:30", "20:00", "GenAI Engineering", "ga", true);
+    put(work, "20:00", "20:30", "GenAI Recall", "recall", true);
+    put([1, 2, 3, 4], "20:30", "22:00", "Project · Build", "project", true);
+    put([5], "20:30", "22:00", "Project · Integrate & Debug", "project", true);
+    put(weekend, "06:00", "08:00", "MLOps Bootcamp", "me", true);
+    put(weekend, "08:30", "10:30", "MLOps Bootcamp", "me", true);
+    put(weekend, "10:30", "11:00", "ML Engineer Recall", "recall", true);
+    put(weekend, "11:00", "13:00", "IBM AI-Native Data Engineering", "me", true);
+    put([0], "14:00", "15:00", "GenAI Weekly Exam", "recall", true);
+    put([0], "15:00", "16:00", "ML Engineer Weekly Exam", "recall", true);
+    put([0], "16:00", "16:30", "Weekly Review", "recall", true);
+    put([0], "16:30", "17:00", "Weekly Planning", "recall", true);
+    put([6], "14:00", "16:00", "Matemáticas y Estadística", "math", true);
+    put([6], "16:00", "17:00", "Data Science Weekly Exam", "recall", true);
+    put([6], "17:00", "18:00", "AI Engineering Weekly Exam", "recall", true);
+    put([6], "18:30", "20:00", "Build Portfolio · Document & Showcase", "project", true);
+    return rows;
+  }
+  function seedScheduleV6() {
     const rows = [];
     const put = (days, start, end, title, category, counted = false) => days.forEach(weekday => rows.push({ id: `base-${rows.length + 1}`, weekday, start, end, title, category, counted, note: "" }));
     const all = [0, 1, 2, 3, 4, 5, 6], work = [1, 2, 3, 4, 5];
@@ -189,6 +238,64 @@
       }
     }
   }
+  function migrateScheduleV7(schedule) {
+    const previous = seedScheduleV6(), next = seedSchedule();
+    const oldById = new Map(previous.map(item => [item.id, item]));
+    const matchedNew = new Set(), rows = [];
+    for (const current of schedule) {
+      const old = oldById.get(current.id);
+      const meal = isMeal(current) && current.weekday != null;
+      const unchanged = old && ["weekday", "start", "end", "title", "category", "counted", "note"].every(key => current[key] === old[key]);
+      if (!unchanged && !meal) { rows.push({ ...current }); continue; }
+      const peers = previous.filter(item => item.weekday === current.weekday && item.title === current.title && item.category === current.category);
+      const position = peers.findIndex(item => item.id === current.id);
+      const candidates = next.filter(item => item.weekday === current.weekday && item.title === current.title && item.category === current.category);
+      const replacement = candidates[Math.max(0, position)];
+      if (replacement) {
+        matchedNew.add(replacement.id);
+        rows.push({ ...replacement, id: current.id });
+      }
+    }
+    for (const item of next) {
+      if (matchedNew.has(item.id) || rows.some(row => row.id === item.id)) continue;
+      if (rows.some(row => row.weekday === item.weekday && row.start < item.end && row.end > item.start)) continue;
+      rows.push({ ...item });
+    }
+    return rows;
+  }
+  function migrateDailyV7(data, previousSchedule) {
+    const oldById = new Map(previousSchedule.map(item => [item.id, item]));
+    const newById = new Map(data.schedule.map(item => [item.id, item]));
+    const oldDefaults = new Map(seedScheduleV6().map(item => [item.id, item]));
+    for (const [date, day] of Object.entries(data.daily)) {
+      if (date < data.cycleStart || !day?.initialized || !Array.isArray(day.tasks)) continue;
+      day.tasks = day.tasks.filter(task => {
+        const old = oldById.get(task.eventId), current = newById.get(task.eventId), baseline = oldDefaults.get(task.eventId);
+        if (isMeal(old) || isMeal(current) || (task.category === "care" && MEALS.has(task.title))) return false;
+        if (!current) return !(baseline && task.title === old?.title && !task.done && !Number(task.actual));
+        if (old && task.title === old.title) task.title = current.title;
+        if (old && Number(task.planned) === hours(old.start, old.end) && !task.done && !Number(task.actual)) task.planned = hours(current.start, current.end);
+        if (old && task.category === old.category) task.category = current.category;
+        return true;
+      });
+      const present = new Set(day.tasks.map(task => task.eventId));
+      for (const event of data.schedule.filter(item => item.weekday === atNoon(date).getDay() && isCounted(item) && !present.has(item.id))) {
+        const tracked = data.activityLog[date]?.[event.id] || {};
+        day.tasks.push({ id: uid("task"), eventId: event.id, title: event.title, planned: hours(event.start, event.end), actual: Number(tracked.actual) || 0, done: !!tracked.done, category: event.category });
+      }
+    }
+  }
+  function migrateWeeklyKeysV7(data) {
+    for (const field of ["exams", "weeklyReviews"]) {
+      const records = data[field];
+      for (const key of Object.keys(records)) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || atNoon(key).getDay() !== 0) continue;
+        const next = localDate(addDays(atNoon(key), 1));
+        records[next] = { ...records[key], ...(records[next] || {}) };
+        delete records[key];
+      }
+    }
+  }
   function allCompetencies(route) { return [...route.competencies, ...state.customCompetencies.filter(item => item.routeId === route.id)]; }
   function competence(item) { return state.competencies[item.id] || {}; }
   function level(item) { return Math.max(0, Math.min(4, Number(competence(item).level) || 0)); }
@@ -227,26 +334,26 @@
   }
   function renderHome() {
     const all = allItems(), shown = all.filter(demonstrated).length, weighted = pct(sum(all.map(level)), all.length * 4);
-    const weekly = sum(state.schedule.filter(item => item.counted).map(item => hours(item.start, item.end)));
+    const weekly = sum(state.schedule.filter(isCounted).map(item => hours(item.start, item.end)));
     const fitness = sum(state.schedule.filter(item => item.counted && item.category === "fitness").map(item => hours(item.start, item.end)));
     const formation = Math.max(0, weekly - fitness);
-    const thisWeek = currentWeekKey(0), weekEnd = localDate(addDays(atNoon(thisWeek), 7));
+    const thisWeek = localDate(monday(atNoon(today()))), weekEnd = localDate(addDays(atNoon(thisWeek), 7));
     const days = Object.entries(state.daily).filter(([date]) => date >= thisWeek && date < weekEnd).map(([, data]) => data);
-    const actual = sum(days.flatMap(day => day.tasks || []).map(task => task.actual));
+    const actual = sum(days.flatMap(day => day.tasks || []).filter(task => !isMeal(task)).map(task => task.actual));
     const currentProject = state.projects.find(item => item.bucket === "principal" && item.status === "active") || state.projects.find(item => item.bucket === "principal") || state.projects.find(item => item.status === "active") || state.projects[0];
     const phases = currentProject?.phases || [], projectProgress = pct(phases.filter(item => item.done).length, phases.length);
     $("#homeMetrics").innerHTML = metric("Avance de competencias", `${weighted}%`, `${shown} demostradas de ${all.length}`, weighted) + metric("Proyecto actual", currentProject ? `${projectProgress}%` : "—", currentProject?.title || "Crea tu proyecto principal", currentProject ? projectProgress : null) + metric("Carga semanal programada", `${weekly.toFixed(1)} h`, `Incluye ${fitness.toFixed(1)} h de ejercicio; no son horas netas`) + metric("Horas reales esta semana", `${actual.toFixed(1)} h`, "Regístralas en Plan diario", pct(actual, weekly));
     $("#homeFocus").innerHTML = seed.routes.map(route => { const next = allCompetencies(route).find(item => item.priority === "P0" && level(item) < 3) || allCompetencies(route).find(item => level(item) < 4); return `<div class="focus-row"><div><strong>${esc(route.name)}</strong><small>${next ? esc(next.id + " · " + (competence(next).title || next.title)) : "Ruta consolidada"}</small></div><span>${routeProgress(route)}%</span></div>`; }).join("");
-    $("#homeLoad").innerHTML = `<p>La referencia de ${weekly.toFixed(1)} h combina formación, práctica, recall, proyectos, evaluaciones y ejercicio. El horario reserva 23:30–06:30 para dormir (7 h); registra el sueño real y ajusta si baja.</p><div class="load-bar"><i style="width:${pct(formation, weekly)}%;background:#3788ec"></i><i style="width:${pct(fitness, weekly)}%;background:#be8276"></i></div><div class="load-line"><span>${formation.toFixed(1)} h formación y seguimiento</span><span>${fitness.toFixed(1)} h ejercicio</span></div><div class="alert">Esta carga es muy exigente. Prioriza calidad y recuperación: si durante dos días seguidos cae el foco, reduce tareas antes de alargar la jornada.</div>`;
+    $("#homeLoad").innerHTML = `<p>La referencia de ${weekly.toFixed(1)} h combina formación, práctica, recall, proyectos, evaluaciones y ejercicio. El horario reserva 22:30–05:30 para dormir (7 h); desayuno, almuerzo y cena son pausas fijas y no se miden.</p><div class="load-bar"><i style="width:${pct(formation, weekly)}%;background:#3788ec"></i><i style="width:${pct(fitness, weekly)}%;background:#be8276"></i></div><div class="load-line"><span>${formation.toFixed(1)} h formación y seguimiento</span><span>${fitness.toFixed(1)} h ejercicio</span></div><div class="alert">Esta carga es muy exigente. Prioriza calidad y recuperación: si durante dos días seguidos cae el foco, reduce tareas antes de alargar la jornada.</div>`;
     $("#homeRoutes").innerHTML = seed.routes.map(route => `<article class="route-card"><span class="route-code">${route.id.toUpperCase()} · ${allCompetencies(route).length} COMPETENCIAS</span><h3>${esc(route.name)}</h3><p>${esc(route.purpose)}</p><div class="progress-track"><i style="width:${routeProgress(route)}%;background:${ROUTE_COLORS[route.id]}"></i></div><small>${routeProgress(route)}% avance ponderado</small><br><button class="link-button" data-go="competencias" data-route="${route.id}">Abrir ruta →</button></article>`).join("");
     renderMonthChart();
   }
   function studyHoursForDay(date) {
     const tasks = state.daily[date]?.tasks || [], trackedIds = new Set(tasks.map(item => item.eventId).filter(Boolean));
-    const actualTasks = sum(tasks.filter(item => item.category !== "fitness").map(item => item.actual));
-    const extra = eventsForDate(date).filter(item => item.counted && item.category !== "fitness" && !trackedIds.has(item.id));
+    const actualTasks = sum(tasks.filter(item => item.category !== "fitness" && !isMeal(item)).map(item => item.actual));
+    const extra = eventsForDate(date).filter(item => isCounted(item) && item.category !== "fitness" && !trackedIds.has(item.id));
     const actual = actualTasks + sum(extra.map(item => state.activityLog[date]?.[item.id]?.actual));
-    const planned = tasks.length ? sum(tasks.filter(item => item.category !== "fitness").map(item => item.planned)) : sum(eventsForDate(date).filter(item => item.counted && item.category !== "fitness").map(item => hours(item.start, item.end)));
+    const planned = tasks.length ? sum(tasks.filter(item => item.category !== "fitness" && !isMeal(item)).map(item => item.planned)) : sum(eventsForDate(date).filter(item => isCounted(item) && item.category !== "fitness").map(item => hours(item.start, item.end)));
     return { actual, planned };
   }
   function periodForDate(date) {
@@ -267,7 +374,7 @@
     const weekLines = [7, 14, 21].map(index => `<line x1="${x(index)}" x2="${x(index)}" y1="35" y2="190" class="chart-week-line"/>`).join("");
     const labels = [0, 7, 14, 21].map(index => `<text x="${x(index)}" y="216" text-anchor="middle" class="chart-label">S${weekStart + index / 7} · ${esc(fmtShort(dates[index]))}</text>`).join("");
     const plannedLine = points.map((item, i) => `${x(i)},${y(item.planned)}`).join(" "), actualLine = elapsed.map((item, i) => `${x(i)},${y(item.actual)}`).join(" ");
-    const dots = elapsed.filter(item => item.actual > 0).map(item => { const index = Number(item.date.slice(-2)) - 1; return `<circle cx="${x(index)}" cy="${y(item.actual)}" r="4" class="chart-dot"><title>${esc(fmtShort(item.date))}: ${item.actual.toFixed(1)} h reales / ${item.planned.toFixed(1)} h planificadas</title></circle>`; }).join("");
+    const dots = points.map((item, index) => item.date <= today() && item.actual > 0 ? `<circle cx="${x(index)}" cy="${y(item.actual)}" r="4" class="chart-dot"><title>${esc(fmtShort(item.date))}: ${item.actual.toFixed(1)} h reales / ${item.planned.toFixed(1)} h planificadas</title></circle>` : "").join("");
     $("#homeMonthChart").innerHTML = `<svg viewBox="0 0 960 230" aria-hidden="true" preserveAspectRatio="xMidYMid meet">${grid}${weekLines}<polyline points="${plannedLine}" class="chart-planned"/>${actualLine ? `<polyline points="${actualLine}" class="chart-actual"/>` : ""}${dots}${labels}</svg><div class="chart-legend"><span class="actual-key">Horas reales</span><span class="planned-key">Horas planificadas</span></div>`;
   }
   function renderCompetencies() {
@@ -341,7 +448,7 @@
     return [...state.schedule.filter(item => item.weekday === weekday).map(item => ({ ...item, date, weekly: true })), ...state.extraEvents.filter(item => item.date === date).map(item => ({ ...item, weekly: false }))].sort((a, b) => minutes(a.start) - minutes(b.start));
   }
   function weekDates() { return Array.from({ length: 7 }, (_, i) => localDate(addDays(atNoon(weekStart), i))); }
-  function weekHours() { return sum(weekDates().flatMap(eventsForDate).filter(item => item.counted).map(item => hours(item.start, item.end))); }
+  function weekHours() { return sum(weekDates().flatMap(eventsForDate).filter(isCounted).map(item => hours(item.start, item.end))); }
   function trackingFor(date, id) {
     const logged = state.activityLog[date]?.[id];
     if (logged) return logged;
@@ -349,6 +456,7 @@
     return task ? { done: !!task.done, actual: Number(task.actual) || 0 } : { done: false, actual: 0 };
   }
   function trackSession(date, id, done, actual, counted) {
+    if (isMeal([...state.schedule, ...state.extraEvents].find(item => item.id === id))) return;
     (state.activityLog[date] ||= {})[id] = { done: !!done, actual: Math.max(0, Number(actual) || 0) };
     if (counted) {
       const day = ensureDay(date), task = day.tasks.find(item => item.eventId === id);
@@ -360,19 +468,20 @@
     const dates = weekDates(), last = dates[6];
     const selected = id => $(`#${prefix}${id}`);
     selected("WeekLabel").textContent = `${fmtShort(dates[0])} – ${fmtShort(last)} ${atNoon(last).getFullYear()}`;
-    const allEvents = dates.flatMap(eventsForDate), completed = allEvents.filter(item => trackingFor(item.date, item.id).done).length;
+    const allEvents = dates.flatMap(eventsForDate).filter(item => !isMeal(item)), completed = allEvents.filter(item => trackingFor(item.date, item.id).done).length;
     const actual = sum(allEvents.map(item => trackingFor(item.date, item.id).actual));
-    selected("Summary").innerHTML = `<span>${weekHours().toFixed(1)} h programadas (carga)</span><span>${actual.toFixed(1)} h reales (todos los bloques)</span><span>${completed}/${allEvents.length} bloques completados · haz clic para registrar</span>`;
+    selected("Summary").innerHTML = `<span>${weekHours().toFixed(1)} h programadas (carga)</span><span>${actual.toFixed(1)} h reales (sin comidas)</span><span>${completed}/${allEvents.length} bloques registrables completados</span>`;
     selected("Legend").innerHTML = Object.entries(CAT).map(([key, [name, color]]) => `<span style="--tag-color:${color}">${esc(name)}</span>`).join("");
     selected("Head").innerHTML = `<div>GMT−05</div>` + dates.map((date, i) => `<div class="${date === today() ? "is-today" : ""}">${SHORT_DAYS[i]}<strong>${atNoon(date).getDate()}</strong></div>`).join("");
-    const axis = `<div class="time-axis">${Array.from({ length: 18 }, (_, i) => `<span style="top:${i * 60}px">${String(i + 6).padStart(2, "0")}:00</span>`).join("")}</div>`;
+    const axis = `<div class="time-axis">${Array.from({ length: 19 }, (_, i) => `<span style="top:${i * 60}px">${String(i + 5).padStart(2, "0")}:00</span>`).join("")}</div>`;
     selected("Grid").innerHTML = axis + dates.map(date => {
-      const blocks = eventsForDate(date).filter(item => minutes(item.end) > 360 && minutes(item.start) < 1440);
-      const now = date === today() && minutes(`${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`) >= 360 ? `<div class="now-line" style="top:${(new Date().getHours() - 6) * 60 + new Date().getMinutes()}px"></div>` : "";
-      return `<div class="day-column" data-calendar-date="${date}">${blocks.map(item => { const top = Math.max(0, minutes(item.start) - 360), bottom = Math.min(1080, minutes(item.end) - 360), height = Math.max(14, bottom - top - 2), compact = minutes(item.end) - minutes(item.start) <= 30, tracked = trackingFor(date, item.id); return `<button class="cal-event ${compact ? "compact" : ""} ${item.counted ? "" : "muted"} ${tracked.done ? "completed" : ""}" style="top:${top}px;height:${height}px;--event-color:${CAT[item.category]?.[1] || CAT.personal[1]}" data-block-id="${esc(item.id)}" data-block-date="${date}" title="${esc(item.title)} · ${item.start}–${item.end}${tracked.done ? ` · completado · ${tracked.actual} h reales` : ""}" aria-label="${esc(item.title)} · ${item.start}–${item.end}${tracked.done ? " · completado" : ""}"><strong>${tracked.done ? "✓ " : ""}${esc(item.title)}</strong>${compact ? "" : `<small>${item.start}–${item.end}${tracked.actual ? ` · ${tracked.actual} h real` : ""}</small>`}</button>`; }).join("")}${now}</div>`;
+      const blocks = eventsForDate(date).filter(item => minutes(item.end) > 300 && minutes(item.start) < 1440);
+      const now = date === today() && minutes(`${String(new Date().getHours()).padStart(2, "0")}:${String(new Date().getMinutes()).padStart(2, "0")}`) >= 300 ? `<div class="now-line" style="top:${(new Date().getHours() - 5) * 60 + new Date().getMinutes()}px"></div>` : "";
+      return `<div class="day-column" data-calendar-date="${date}">${blocks.map(item => { const top = Math.max(0, minutes(item.start) - 300), bottom = Math.min(1140, minutes(item.end) - 300), height = Math.max(14, bottom - top - 2), compact = minutes(item.end) - minutes(item.start) <= 30, meal = isMeal(item), tracked = meal ? { done: false, actual: 0 } : trackingFor(date, item.id), tag = meal ? "div" : "button"; return `<${tag} class="cal-event ${compact ? "compact" : ""} ${isCounted(item) ? "" : "muted"} ${meal ? "fixed-meal" : ""} ${tracked.done ? "completed" : ""}" style="top:${top}px;height:${height}px;--event-color:${CAT[item.category]?.[1] || CAT.personal[1]}" ${meal ? "" : `data-block-id="${esc(item.id)}" data-block-date="${date}"`} title="${esc(item.title)} · ${item.start}–${item.end}${meal ? " · pausa fija, sin medición" : tracked.done ? ` · completado · ${tracked.actual} h reales` : ""}" ${meal ? "" : `aria-label="${esc(item.title)} · ${item.start}–${item.end}${tracked.done ? " · completado" : ""}"`}><strong>${tracked.done ? "✓ " : ""}${esc(item.title)}</strong>${compact ? "" : `<small>${item.start}–${item.end}${tracked.actual ? ` · ${tracked.actual} h real` : ""}</small>`}</${tag}>`; }).join("")}${now}</div>`;
     }).join("");
   }
   function openBlock(item = null, date = today(), time = "09:00") {
+    if (isMeal(item)) return;
     const form = $("#blockForm"); form.reset();
     form.elements.id.value = item?.id || ""; form.elements.title.value = item?.title || "";
     form.elements.start.value = item?.start || time;
@@ -394,6 +503,8 @@
     const start = form.elements.start.value, end = form.elements.end.value;
     if (minutes(end) <= minutes(start)) { notice("La hora final debe ser posterior a la inicial."); return; }
     const existingWeekly = state.schedule.find(item => item.id === id), existingOne = state.extraEvents.find(item => item.id === id);
+    if (isMeal(existingWeekly) || isMeal(existingOne) || MEALS.has(form.elements.title.value.trim())) { notice("Las comidas son pausas fijas y no se editan ni registran."); return; }
+    if (state.schedule.some(item => isMeal(item) && item.weekday === atNoon(date).getDay() && item.start < end && item.end > start)) { notice("Este horario se solapa con una comida fija."); return; }
     const record = { id: id || uid("block"), title: form.elements.title.value.trim(), start, end, category: form.elements.category.value, counted: form.elements.counted.checked, note: form.elements.note.value.trim() };
     if (!record.title) { notice("Escribe una actividad."); return; }
     if (existingWeekly) state.schedule = state.schedule.filter(item => item.id !== id);
@@ -406,6 +517,7 @@
   function deleteBlock() {
     const id = $("#blockForm").elements.id.value;
     if (!id) return;
+    if (isMeal([...state.schedule, ...state.extraEvents].find(item => item.id === id))) return;
     state.schedule = state.schedule.filter(item => item.id !== id);
     state.extraEvents = state.extraEvents.filter(item => item.id !== id);
     save(); $("#blockDialog").close(); renderCalendar(); renderHome(); notice("Bloque eliminado.");
@@ -419,13 +531,13 @@
   function addMissingTasks(date) {
     const day = state.daily[date] ||= { tasks: [] };
     const present = new Set(day.tasks.map(item => item.eventId));
-    eventsForDate(date).filter(item => item.counted && !present.has(item.id)).forEach(item => { const tracked = trackingFor(date, item.id); day.tasks.push({ id: uid("task"), eventId: item.id, title: item.title, planned: hours(item.start, item.end), actual: tracked.actual, done: tracked.done, category: item.category }); });
+    eventsForDate(date).filter(item => isCounted(item) && !present.has(item.id)).forEach(item => { const tracked = trackingFor(date, item.id); day.tasks.push({ id: uid("task"), eventId: item.id, title: item.title, planned: hours(item.start, item.end), actual: tracked.actual, done: tracked.done, category: item.category }); });
   }
   function renderPlan() {
     $("#planDate").value = planDate;
-    const day = ensureDay(planDate), planned = sum(day.tasks.map(item => item.planned)), actual = sum(day.tasks.map(item => item.actual)), done = day.tasks.filter(item => item.done).length;
-    $("#dayMetrics").innerHTML = metric("Fecha", fmtShort(planDate), DAY_NAMES[atNoon(planDate).getDay()]) + metric("Plan", `${planned.toFixed(1)} h`, `${day.tasks.length} tareas`) + metric("Real", `${actual.toFixed(1)} h`, "Carga registrada", pct(actual, planned)) + metric("Completadas", `${done}/${day.tasks.length}`, "Valora resultados, no solo horas", pct(done, day.tasks.length));
-    $("#dailyTaskList").innerHTML = day.tasks.length ? day.tasks.map(item => `<div class="task-row" data-task-id="${esc(item.id)}"><input type="checkbox" data-task-field="done" ${item.done ? "checked" : ""} aria-label="Completada"><input data-task-field="title" value="${esc(item.title)}" aria-label="Tarea"><small class="task-category">${esc(CAT[item.category]?.[0] || "Personal")}</small><input data-task-field="planned" type="number" min="0" step="0.25" value="${item.planned}" aria-label="Horas planeadas"><input data-task-field="actual" type="number" min="0" step="0.25" value="${item.actual}" aria-label="Horas reales"><button data-delete-task="${esc(item.id)}" aria-label="Eliminar tarea">×</button></div>`).join("") : `<article class="list-card">Día sin tareas. Añade una para empezar.</article>`;
+    const day = ensureDay(planDate), tasks = day.tasks.filter(item => !isMeal(item)), planned = sum(tasks.map(item => item.planned)), actual = sum(tasks.map(item => item.actual)), done = tasks.filter(item => item.done).length;
+    $("#dayMetrics").innerHTML = metric("Fecha", fmtShort(planDate), DAY_NAMES[atNoon(planDate).getDay()]) + metric("Plan", `${planned.toFixed(1)} h`, `${tasks.length} tareas`) + metric("Real", `${actual.toFixed(1)} h`, "Carga registrada", pct(actual, planned)) + metric("Completadas", `${done}/${tasks.length}`, "Valora resultados, no solo horas", pct(done, tasks.length));
+    $("#dailyTaskList").innerHTML = tasks.length ? tasks.map(item => `<div class="task-row" data-task-id="${esc(item.id)}"><input type="checkbox" data-task-field="done" ${item.done ? "checked" : ""} aria-label="Completada"><input data-task-field="title" value="${esc(item.title)}" aria-label="Tarea"><small class="task-category">${esc(CAT[item.category]?.[0] || "Personal")}</small><input data-task-field="planned" type="number" min="0" step="0.25" value="${item.planned}" aria-label="Horas planeadas"><input data-task-field="actual" type="number" min="0" step="0.25" value="${item.actual}" aria-label="Horas reales"><button data-delete-task="${esc(item.id)}" aria-label="Eliminar tarea">×</button></div>`).join("") : `<article class="list-card">Día sin tareas. Añade una para empezar.</article>`;
   }
   function renderEnergy() {
     $("#energyDate").value = energyDate;
@@ -433,7 +545,7 @@
     $("#energyForm").innerHTML = `<label>Horas de sueño<input type="number" min="0" max="14" step="0.25" data-energy-field="sleep" value="${esc(record.sleep ?? "")}" placeholder="7"></label><label>Ejercicio (min)<input type="number" min="0" max="300" step="5" data-energy-field="exercise" value="${esc(record.exercise ?? "")}" placeholder="45"></label><label>Foco (1–5)<select data-energy-field="focus"><option value="">Sin evaluar</option>${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${Number(record.focus) === n ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>Energía (1–5)<select data-energy-field="mood"><option value="">Sin evaluar</option>${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${Number(record.mood) === n ? "selected" : ""}>${n}</option>`).join("")}</select></label><label class="full">Nota de recuperación<textarea data-energy-field="note" placeholder="¿Qué te ayudó o agotó hoy?">${esc(record.note || "")}</textarea></label>`;
     $("#energyTrend").innerHTML = Array.from({ length: 7 }, (_, i) => localDate(addDays(atNoon(energyDate), i - 6))).map(date => { const data = state.energy[date] || {}; const sleep = Number(data.sleep) || 0; return `<div class="trend-row"><strong>${fmtShort(date)}</strong><div class="progress-track"><i style="width:${pct(sleep, 8)}%;background:${sleep >= 7 ? "var(--good)" : "var(--warn)"}"></i></div><small>${sleep ? `${sleep} h sueño` : "Sin registro"} · foco ${data.focus || "—"}/5</small></div>`; }).join("");
   }
-  function examWeek() { return currentWeekKey(reviewOffset); }
+  function examWeek() { return localDate(addDays(monday(atNoon(today())), reviewOffset * 7)); }
   function sourceRoute(curriculum, item) {
     if (["futura", "krish-maths"].includes(curriculum)) return "ds";
     if (["krish-mlops", "ibm-de"].includes(curriculum)) return "me";
@@ -481,23 +593,23 @@
   function examPrompt(key, routeId) {
     const names = { ds: "Data Science", me: "ML Engineer", ai: "AI Engineer", ga: "GenAI Engineer" }, record = state.exams[key]?.[routeId] || {}, topics = record.topics?.trim() || weeklyTopics(key, routeId).topics;
     const criteria = { ds: "formulación, estadística, validación, leakage, métricas e interpretación", me: "pipelines, reproducibilidad, despliegue, CI/CD, datos, monitoreo y depuración", ai: "fundamentos de redes, implementación, entrenamiento, debugging y evaluación", ga: "LLM, prompts, RAG, agentes, evaluación, seguridad, costo y latencia" };
-    return `Actúa como examinador exigente de ${names[routeId]}. Evalúame sobre lo que estudié en la semana ${fmtShort(key)}–${fmtShort(localDate(addDays(atNoon(key), 6)))}. Temas:\n${topics}\n\nDiseña un examen avanzado de 45 minutos con 4 preguntas conceptuales, 2 ejercicios aplicados y 1 caso de diagnóstico o debugging. Adapta cada pregunta a los temas indicados; si son escasos, profundiza en ellos sin inventar contenidos que no estudié. Evalúa especialmente ${criteria[routeId]}. No muestres soluciones hasta que responda. Después califica de 0 a 100, explica mis errores, pide una solución mejorada y haz que defienda una respuesta en español y otra en inglés.`;
+    return `Actúa como examinador exigente de ${names[routeId]}. Evalúame sobre lo que estudié en la semana ${fmtShort(key)}–${fmtShort(localDate(addDays(atNoon(key), 6)))}. Temas:\n${topics}\n\nDiseña un examen avanzado de 60 minutos con 4 preguntas conceptuales, 2 ejercicios aplicados y 1 caso de diagnóstico o debugging. Adapta cada pregunta a los temas indicados; si son escasos, profundiza en ellos sin inventar contenidos que no estudié. Evalúa especialmente ${criteria[routeId]}. No muestres soluciones hasta que responda. Después califica de 0 a 100, explica mis errores, pide una solución mejorada y haz que defienda una respuesta en español y otra en inglés.`;
   }
   function renderExams() {
     const key = examWeek(), dates = `${fmtShort(key)} – ${fmtShort(localDate(addDays(atNoon(key), 6)))}`;
-    $("#examPanel").innerHTML = `<div class="calendar-toolbar"><div><button class="secondary-btn" data-review-nav="prev">‹</button><button class="secondary-btn" data-review-nav="today">Semana actual</button><button class="secondary-btn" data-review-nav="next">›</button><strong>${dates}</strong></div></div><div class="alert">Los temas se actualizan con tu Recall y los avances de Fuentes. Si aún no hay registros, se sugiere la secuencia semanal. Puedes editar la lista antes de generar cada examen.</div>${[["ds", "Data Science"], ["me", "ML Engineer"], ["ai", "AI Engineer"], ["ga", "GenAI Engineer"]].map(([id, title]) => { const record = state.exams[key]?.[id] || {}, suggested = weeklyTopics(key, id); return `<article class="exam-card" data-exam="${id}"><div><h2>${title}</h2><p>Examen de 45 min · ${esc(suggested.source)}</p></div><select data-exam-field="status" aria-label="Estado del examen de ${title}"><option value="pending" ${record.status === "pending" ? "selected" : ""}>Pendiente</option><option value="done" ${record.status === "done" ? "selected" : ""}>Realizado</option><option value="review" ${record.status === "review" ? "selected" : ""}>Corregir</option></select><label class="exam-topics">Temas de esta semana (editables)<textarea data-exam-field="topics" placeholder="Un tema por línea">${esc(record.topics ?? suggested.topics)}</textarea></label><button class="secondary-btn" data-exam-quiz="${id}">Copiar prompt de examen</button><input type="number" min="0" max="100" step="1" data-exam-field="score" value="${esc(record.score ?? "")}" placeholder="Puntuación /100" aria-label="Puntuación de ${title}"><textarea data-exam-field="notes" placeholder="Errores, corrección y siguiente práctica" aria-label="Notas de ${title}">${esc(record.notes || "")}</textarea></article>`; }).join("")}`;
+    $("#examPanel").innerHTML = `<div class="calendar-toolbar"><div><button class="secondary-btn" data-review-nav="prev">‹</button><button class="secondary-btn" data-review-nav="today">Semana actual</button><button class="secondary-btn" data-review-nav="next">›</button><strong>${dates}</strong></div></div><div class="alert">Los temas se actualizan con tu Recall y los avances de Fuentes. Si aún no hay registros, se sugiere la secuencia semanal. Puedes editar la lista antes de generar cada examen.</div>${[["ds", "Data Science"], ["ai", "AI Engineer"], ["ga", "GenAI Engineer"], ["me", "ML Engineer"]].map(([id, title]) => { const record = state.exams[key]?.[id] || {}, suggested = weeklyTopics(key, id); return `<article class="exam-card" data-exam="${id}"><div><h2>${title}</h2><p>Examen de 60 min · ${esc(suggested.source)}</p></div><select data-exam-field="status" aria-label="Estado del examen de ${title}"><option value="pending" ${record.status === "pending" ? "selected" : ""}>Pendiente</option><option value="done" ${record.status === "done" ? "selected" : ""}>Realizado</option><option value="review" ${record.status === "review" ? "selected" : ""}>Corregir</option></select><label class="exam-topics">Temas de esta semana (editables)<textarea data-exam-field="topics" placeholder="Un tema por línea">${esc(record.topics ?? suggested.topics)}</textarea></label><button class="secondary-btn" data-exam-quiz="${id}">Copiar prompt de examen</button><input type="number" min="0" max="100" step="1" data-exam-field="score" value="${esc(record.score ?? "")}" placeholder="Puntuación /100" aria-label="Puntuación de ${title}"><textarea data-exam-field="notes" placeholder="Errores, corrección y siguiente práctica" aria-label="Notas de ${title}">${esc(record.notes || "")}</textarea></article>`; }).join("")}`;
   }
   function renderDailyReview() {
-    const date = planDate, record = state.dailyReviews[date] || {}, day = ensureDay(date), actual = sum(day.tasks.map(item => item.actual)), done = day.tasks.filter(item => item.done).length;
+    const date = planDate, record = state.dailyReviews[date] || {}, day = ensureDay(date), tasks = day.tasks.filter(item => !isMeal(item)), actual = sum(tasks.map(item => item.actual)), done = tasks.filter(item => item.done).length;
     const legacy = ["learned", "gap", "next", "english"].some(field => record[field]?.trim());
-    $("#dailyReview").innerHTML = `<div class="toolbar-panel"><label>Fecha<input type="date" id="dailyReviewDate" value="${date}"></label></div><div class="review-metrics"><div><strong>${actual.toFixed(1)} h</strong><span>Trabajo real</span></div><div><strong>${done}/${day.tasks.length}</strong><span>Tareas completas</span></div><div><strong>${state.energy[date]?.sleep || "—"} h</strong><span>Sueño registrado</span></div><div><strong>${state.energy[date]?.focus || "—"}/5</strong><span>Foco</span></div></div><div class="recall-grid">${[["ds", "DS Recall", "Data Science"], ["ai", "AI Recall", "AI Engineer"], ["ga", "GenAI Recall", "GenAI Engineer"]].map(([id, title, subtitle]) => { const item = record[id] || {}; return `<article class="panel recall-card" data-recall-route="${id}"><div class="panel-head"><div><div class="eyebrow">${esc(subtitle)}</div><h2>${title}</h2></div><button class="link-button" data-recall-prompt="${id}">Copiar quiz →</button></div><div class="review-form"><label class="full">¿Qué estudiaste hoy?<textarea data-recall-field="learned" placeholder="Temas y conceptos concretos">${esc(item.learned || "")}</textarea></label><label class="full">Recuerda sin apuntes: explícalo con tus palabras<textarea data-recall-field="recall" placeholder="Definiciones, mecanismo, ejemplos y límites">${esc(item.recall || "")}</textarea></label><label class="full">¿Qué aplicaste y dónde fallaste?<textarea data-recall-field="practice" placeholder="Ejercicio, error y corrección">${esc(item.practice || "")}</textarea></label><label class="full">Ahora explícalo en inglés<textarea data-recall-field="english" placeholder="Explain what you learned in English">${esc(item.english || "")}</textarea></label><label class="full">Siguiente repaso o práctica<textarea data-recall-field="next" placeholder="La próxima acción concreta">${esc(item.next || "")}</textarea></label></div></article>`; }).join("")}</div>${legacy ? `<details class="panel legacy-review"><summary>Notas de revisión diaria anteriores (sin ruta)</summary><div class="review-form"><label class="full">¿Qué construí o comprendí?<textarea data-daily-review="learned">${esc(record.learned || "")}</textarea></label><label class="full">Brecha<textarea data-daily-review="gap">${esc(record.gap || "")}</textarea></label><label class="full">Siguiente acción<textarea data-daily-review="next">${esc(record.next || "")}</textarea></label><label class="full">English<textarea data-daily-review="english">${esc(record.english || "")}</textarea></label></div></details>` : ""}`;
+    $("#dailyReview").innerHTML = `<div class="toolbar-panel"><label>Fecha<input type="date" id="dailyReviewDate" value="${date}"></label></div><div class="review-metrics"><div><strong>${actual.toFixed(1)} h</strong><span>Trabajo real</span></div><div><strong>${done}/${tasks.length}</strong><span>Tareas completas</span></div><div><strong>${state.energy[date]?.sleep || "—"} h</strong><span>Sueño registrado</span></div><div><strong>${state.energy[date]?.focus || "—"}/5</strong><span>Foco</span></div></div><div class="recall-grid">${[["ds", "DS Recall", "Data Science"], ["me", "ME Recall", "ML Engineer"], ["ai", "AI Recall", "AI Engineer"], ["ga", "GenAI Recall", "GenAI Engineer"]].map(([id, title, subtitle]) => { const item = record[id] || {}; return `<article class="panel recall-card" data-recall-route="${id}"><div class="panel-head"><div><div class="eyebrow">${esc(subtitle)}</div><h2>${title}</h2></div><button class="link-button" data-recall-prompt="${id}">Copiar quiz →</button></div><div class="review-form"><label class="full">¿Qué estudiaste hoy?<textarea data-recall-field="learned" placeholder="Temas y conceptos concretos">${esc(item.learned || "")}</textarea></label><label class="full">Recuerda sin apuntes: explícalo con tus palabras<textarea data-recall-field="recall" placeholder="Definiciones, mecanismo, ejemplos y límites">${esc(item.recall || "")}</textarea></label><label class="full">¿Qué aplicaste y dónde fallaste?<textarea data-recall-field="practice" placeholder="Ejercicio, error y corrección">${esc(item.practice || "")}</textarea></label><label class="full">Ahora explícalo en inglés<textarea data-recall-field="english" placeholder="Explain what you learned in English">${esc(item.english || "")}</textarea></label><label class="full">Siguiente repaso o práctica<textarea data-recall-field="next" placeholder="La próxima acción concreta">${esc(item.next || "")}</textarea></label></div></article>`; }).join("")}</div>${legacy ? `<details class="panel legacy-review"><summary>Notas de revisión diaria anteriores (sin ruta)</summary><div class="review-form"><label class="full">¿Qué construí o comprendí?<textarea data-daily-review="learned">${esc(record.learned || "")}</textarea></label><label class="full">Brecha<textarea data-daily-review="gap">${esc(record.gap || "")}</textarea></label><label class="full">Siguiente acción<textarea data-daily-review="next">${esc(record.next || "")}</textarea></label><label class="full">English<textarea data-daily-review="english">${esc(record.english || "")}</textarea></label></div></details>` : ""}`;
   }
   function renderWeeklyReview() {
     const key = examWeek(), dates = Array.from({ length: 7 }, (_, i) => localDate(addDays(atNoon(key), i))), days = dates.map(date => state.daily[date]).filter(Boolean);
-    const actual = sum(days.flatMap(day => day.tasks || []).map(item => item.actual)), done = sum(days.map(day => day.tasks.filter(item => item.done).length)), total = sum(days.map(day => day.tasks.length));
+    const actual = sum(days.flatMap(day => day.tasks || []).filter(item => !isMeal(item)).map(item => item.actual)), done = sum(days.map(day => day.tasks.filter(item => !isMeal(item) && item.done).length)), total = sum(days.map(day => day.tasks.filter(item => !isMeal(item)).length));
     const newProof = state.history.filter(item => item.date >= key && item.date <= dates[6] && item.to >= 3 && item.from < 3).length;
     const sleeps = dates.map(date => Number(state.energy[date]?.sleep)).filter(Number.isFinite).filter(n => n > 0), avgSleep = sleeps.length ? (sum(sleeps) / sleeps.length).toFixed(1) : "—";
-    const record = state.weeklyReviews[key] || {}, planned = sum(dates.flatMap(eventsForDate).filter(item => item.counted).map(item => hours(item.start, item.end)));
+    const record = state.weeklyReviews[key] || {}, planned = sum(dates.flatMap(eventsForDate).filter(isCounted).map(item => hours(item.start, item.end)));
     $("#weeklyReview").innerHTML = `<div class="calendar-toolbar"><div><button class="secondary-btn" data-review-nav="prev">‹</button><button class="secondary-btn" data-review-nav="today">Semana actual</button><button class="secondary-btn" data-review-nav="next">›</button><strong>${fmtShort(key)} – ${fmtShort(dates[6])}</strong></div></div><div class="review-metrics"><div><strong>${actual.toFixed(1)} h</strong><span>Horas reales / ${planned.toFixed(1)} h plantilla</span></div><div><strong>${done}/${total}</strong><span>Tareas completadas</span></div><div><strong>${newProof}</strong><span>Nuevas competencias demostradas</span></div><div><strong>${avgSleep} h</strong><span>Sueño medio registrado</span></div></div><div class="review-form"><label class="full">Evidencias concretas de la semana<textarea data-weekly-review="proof">${esc(record.proof || "")}</textarea></label><label>Mayor brecha o error<textarea data-weekly-review="gap">${esc(record.gap || "")}</textarea></label><label>Qué dejaré de hacer / reduciré<textarea data-weekly-review="stop">${esc(record.stop || "")}</textarea></label><label class="full">Tres prioridades de la próxima semana<textarea data-weekly-review="next">${esc(record.next || "")}</textarea></label><label class="full">Ajuste de energía y sostenibilidad<textarea data-weekly-review="energy">${esc(record.energy || "")}</textarea></label></div>`;
   }
   function copyText(value) { navigator.clipboard.writeText(value).then(() => notice("Prompt copiado al portapapeles."), () => notice("No se pudo copiar; verifica permisos del navegador.")); }
@@ -523,7 +635,7 @@
     if (button?.dataset.monthNav) { const delta = button.dataset.monthNav === "prev" ? -28 : 28; homeMonth = button.dataset.monthNav === "today" ? periodForDate(today()) : localDate(addDays(atNoon(homeMonth), delta)); if (homeMonth < state.cycleStart) homeMonth = state.cycleStart; renderMonthChart(); return; }
     if (button?.id === "addBlockButton") { openBlock(null, today()); return; }
     if (button?.dataset.blockId) { const item = [...state.schedule, ...state.extraEvents].find(row => row.id === button.dataset.blockId); if (item) openBlock({ ...item, weekly: item.weekday != null }, button.dataset.blockDate); return; }
-    if (target.classList.contains("day-column")) { const rect = target.getBoundingClientRect(), y = Math.max(0, Math.min(1079, event.clientY - rect.top)), minute = 360 + Math.floor(y / 30) * 30, time = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`; openBlock(null, target.dataset.calendarDate, time); return; }
+    if (target.classList.contains("day-column")) { const rect = target.getBoundingClientRect(), y = Math.max(0, Math.min(1139, event.clientY - rect.top)), minute = 300 + Math.floor(y / 30) * 30, time = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`; openBlock(null, target.dataset.calendarDate, time); return; }
     if (button?.id === "closeBlockDialog" || button?.id === "cancelBlockButton") { $("#blockDialog").close(); return; }
     if (button?.id === "deleteBlockButton") { if (confirm("¿Eliminar este bloque?")) deleteBlock(); return; }
     if (button?.id === "planTodayButton") { planDate = today(); planFollowsToday = true; renderPlan(); return; }
@@ -532,7 +644,7 @@
     if (button?.dataset.deleteTask) { ensureDay(planDate).tasks = ensureDay(planDate).tasks.filter(item => item.id !== button.dataset.deleteTask); save(); renderPlan(); return; }
     if (button?.dataset.reviewNav) { reviewOffset = button.dataset.reviewNav === "today" ? 0 : reviewOffset + (button.dataset.reviewNav === "prev" ? -1 : 1); renderPage(page); return; }
     if (button?.dataset.examQuiz) { copyText(examPrompt(examWeek(), button.dataset.examQuiz)); return; }
-    if (button?.dataset.recallPrompt) { const id = button.dataset.recallPrompt, item = state.dailyReviews[planDate]?.[id] || {}, names = { ds: "Data Science", ai: "AI Engineering", ga: "GenAI Engineering" }; copyText(`Actúa como tutor exigente de ${names[id]}. Hoy estudié: ${item.learned?.trim() || "todavía no he registrado mis temas"}. Hazme 5 preguntas de recuerdo activo y un ejercicio de transferencia. No des pistas hasta que responda. Luego corrige mis errores, pídeme que explique el concepto en español y finalmente en inglés. Enfócate en mis dudas: ${item.practice?.trim() || "por identificar"}.`); return; }
+    if (button?.dataset.recallPrompt) { const id = button.dataset.recallPrompt, item = state.dailyReviews[planDate]?.[id] || {}, names = { ds: "Data Science", me: "ML Engineering", ai: "AI Engineering", ga: "GenAI Engineering" }; copyText(`Actúa como tutor exigente de ${names[id]}. Hoy estudié: ${item.learned?.trim() || "todavía no he registrado mis temas"}. Hazme 5 preguntas de recuerdo activo y un ejercicio de transferencia. No des pistas hasta que responda. Luego corrige mis errores, pídeme que explique el concepto en español y finalmente en inglés. Enfócate en mis dudas: ${item.practice?.trim() || "por identificar"}.`); return; }
     if (button?.id === "menuButton") { $("#sidebar").classList.toggle("open"); return; }
     if (button?.id === "themeButton") { state.theme = state.theme === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = state.theme; save(); return; }
     if (button?.id === "exportButton") { const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }), url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `mltraining-respaldo-${today()}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); return; }
@@ -598,6 +710,6 @@
     $("#todayLabel").dataset.date = today();
     updateSidebar(); showPage(location.hash.slice(1) || "inicio", false);
   }
-  if (typeof module !== "undefined" && module.exports) module.exports = { seedSchedule, migrateScheduleV6, migrateDailyV6, sourceRoute };
+  if (typeof module !== "undefined" && module.exports) module.exports = { seedSchedule, seedScheduleV6, migrateScheduleV6, migrateDailyV6, migrateScheduleV7, migrateDailyV7, migrateWeeklyKeysV7, monday, sourceRoute };
   else init();
 })();

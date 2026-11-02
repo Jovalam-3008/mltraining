@@ -38,3 +38,14 @@ test("the public hours begin with the cycle, not the prior template", () => {
   });
   assert.deepEqual(summary.hoursByDay, { "2026-11-02": 4 });
 });
+
+test("fixed meals never contribute to public study totals", () => {
+  const summary = buildPublicSummary({
+    cycleStart: "2026-11-02",
+    schedule: [{ id: "meal", title: "Desayuno", category: "care", counted: true }, { id: "study", title: "Python", category: "ds", counted: true }],
+    daily: { "2026-11-02": { tasks: [{ eventId: "meal", title: "Desayuno", category: "care", actual: .5 }, { eventId: "study", title: "Python", category: "ds", actual: 2 }] } },
+    activityLog: { "2026-11-03": { meal: { actual: .5 }, study: { actual: 1 } } },
+  });
+  assert.equal(summary.hoursByDay["2026-11-02"], 2);
+  assert.equal(summary.hoursByDay["2026-11-03"], 1);
+});

@@ -4,6 +4,7 @@ function safeHours(value) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.max(0, Math.min(24, number)) : 0;
 }
+const isMeal = item => ["Desayuno", "Almuerzo", "Cena"].includes(item?.title);
 
 function buildPublicSummary(state) {
   const competencies = {};
@@ -28,12 +29,12 @@ function buildPublicSummary(state) {
   const daily = state.daily || {};
   const activityLog = state.activityLog || {};
   const events = [...(Array.isArray(state.schedule) ? state.schedule : []), ...(Array.isArray(state.extraEvents) ? state.extraEvents : [])];
-  const countableEvents = new Set(events.filter(event => event.counted && event.category !== "fitness").map(event => event.id));
+  const countableEvents = new Set(events.filter(event => event.counted && event.category !== "fitness" && !isMeal(event)).map(event => event.id));
   for (const date of new Set([...Object.keys(daily), ...Object.keys(activityLog)])) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < cycleStart) continue;
     const tasks = Array.isArray(daily[date]?.tasks) ? daily[date].tasks : [];
     const tracked = new Set(tasks.map(task => task.eventId).filter(Boolean));
-    const taskHours = tasks.reduce((total, task) => total + (task.category === "fitness" ? 0 : safeHours(task.actual)), 0);
+    const taskHours = tasks.reduce((total, task) => total + (task.category === "fitness" || isMeal(task) ? 0 : safeHours(task.actual)), 0);
     const directHours = Object.entries(activityLog[date] || {}).reduce((total, [id, record]) => total + (tracked.has(id) || !countableEvents.has(id) ? 0 : safeHours(record?.actual)), 0);
     hoursByDay[date] = Math.round((taskHours + directHours) * 100) / 100;
   }
